@@ -9,10 +9,16 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "async": "^2.6.0",
+    "basic-auth": "^2.0.0",
     "connect-lastmile": "^1.0.2",
     "connect-timeout": "^1.9.0",
+    "db-migrate": "^0.11.1",
+    "db-migrate-mysql": "^1.1.10",
     "express": "^4.16.3",
+    "gh-got": "^7.0.0",
     "ldapjs": "^1.0.2",
+    "mysql": "^2.15.0",
     "nodemailer": "^4.6.4",
     "supererror": "^0.7.2",
     "uuid": "^3.2.1"

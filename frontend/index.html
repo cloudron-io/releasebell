@@ -15,7 +15,7 @@
 <el-container id="app">
   <el-header>
     <el-menu :default-active="activeView" class="el-menu-demo" mode="horizontal" @select="handleViewSelect">
-      <el-menu-item index="releases"><i class="el-icon-bell"></i> Release Bell</el-menu-item>
+      <el-menu-item index="welcome"><i class="el-icon-bell"></i> Release Bell</el-menu-item>
       <el-menu-item index="projects" v-show="profile">Projects</el-menu-item>
       <el-menu-item index="profile" v-show="profile">Profile</el-menu-item>
       <el-menu-item index="logout" v-show="profile" style="float: right" @click="onLogout">Logout</el-menu-item>
@@ -26,40 +26,34 @@
       <el-row type="flex" class="row-bg" justify="center">
         <el-col :span="6">
           <el-form ref="form" :model="login" label-position="top" @submit.native.prevent>
-            <el-form-item label="Username"><el-input v-model="login.username" required></el-input></el-form-item>
+            <el-form-item label="Username"><el-input v-model="login.username" required autofocus></el-input></el-form-item>
             <el-form-item label="Password"><el-input v-model="login.password" type="password" required></el-input></el-form-item>
             <el-form-item><el-button type="primary" native-type="submit" @click="onLogin">Login</el-button></el-form-item>
           </el-form>
         </el-col>
       </el-row>
     </div>
-    <div v-else-if="activeView === 'releases'">
-      <el-table :data="releases" stripe style="width: 100%">
-        <el-table-column prop="name" label="Project"></el-table-column>
-        <el-table-column prop="release" label="Release"></el-table-column>
-        <el-table-column prop="published" label="Published"></el-table-column>
-      </el-table>
-    </div>
     <div v-else-if="activeView === 'projects'">
-      <el-table :data="projects" stripe style="width: 100%">
-        <el-table-column prop="name" label="Project"></el-table-column>
-        <el-table-column prop="release" label="Latest Release"></el-table-column>
-        <el-table-column prop="published" label="Published"></el-table-column>
-        <el-table-column label="">
-          <template slot-scope="scope">
-            <el-button @click="" type="text" size="small">Edit</el-button>
-            <el-button type="text" size="small">Disable</el-button>
-          </template></el-table-column>
-      </el-table>
+      <el-row type="flex" class="row-bg" justify="center">
+        <el-col :span="12">
+          <center v-show="projects === null"><h1><i class="el-icon-loading"></i></h1></center>
+          <center v-show="projects && projects.length === 0">No projects found.</center>
+          <el-table :data="projects" v-show="projects && projects.length" stripe style="width: 100%" :default-sort="{ prop: 'name', order: 'ascending' }">
+            <el-table-column prop="name" label="Project Name" sortable></el-table-column>
+            <el-table-column label="" align="right">
+              <template slot-scope="scope">
+                <el-button type="text" size="small" @click="setProjectState(scope.row.id, !scope.row.enabled)">{{ scope.row.enabled ? 'Disable' : 'Enable' }}</el-button>
+              </template></el-table-column>
+          </el-table>
+        </el-col>
+      </el-row>
     </div>
     <div v-else-if="activeView === 'profile'">
       <el-row type="flex" class="row-bg" justify="center">
         <el-col :span="10">
           <el-form ref="form" label-width="120px" @submit.native.prevent>
-            <el-form-item label="Email" :rules="[
-              { required: true, message: 'Please input email address', trigger: 'blur' },
-              { type: 'email', message: 'Please input correct email address', trigger: ['blur', 'change'] }]"><el-input v-model="profile.email" type="email"></el-input></el-form-item>
-            <el-form-item label="Github token" description="fooobar">
+            <el-form-item label="Email" required><el-input v-model="profile.email" type="email"></el-input></el-form-item>
+            <el-form-item label="Github token">
               <el-input v-model="profile.githubToken"></el-input>
               <a href="https://github.com/settings/tokens/new?description=ReleaseBell" target="_blank">Generate a GitHub API token</a>
             </el-form-item>
@@ -67,6 +61,12 @@
           </el-form>
         </el-col>
       </el-row>
+    </div>
+    <div v-else-if="activeView === 'welcome'">
+      <center>
+        <h1><i class="el-icon-bell"></i> Welcome to Release Bell</h1>
+        <p>Set a GitHub token in your <a href="" @click.prevent="handleViewSelect('profile')">profile</a> to start receiving new release notifcations for your starred repos.</p>
+      </center>
     </div>
     <div v-else>
       <center><h1><i class="el-icon-loading"></i></h1></center>

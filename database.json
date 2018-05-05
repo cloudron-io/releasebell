@@ -1,0 +1,11 @@
+{
+    "defaultEnv": "local",
+    "local": {
+      "host": "localhost",
+      "user": "root",
+      "password": "",
+      "database": "releasebell",
+      "driver": "mysql",
+      "multipleStatements": true
+    }
+  }

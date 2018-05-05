@@ -1,4 +1,15 @@
 
+body {
+    margin: 0;
+    font-family: Helvetica Neue,Helvetica,PingFang SC,Hiragino Sans GB,Microsoft YaHei,SimSun,sans-serif;
+    font-weight: 400;
+    color: rgb(96, 98, 102);
+}
+
 body > .el-container {
     height: 100%;
+}
+
+.el-footer {
+    padding: 3px 20px;
 }

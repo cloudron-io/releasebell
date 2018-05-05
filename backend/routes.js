@@ -1,7 +1,12 @@
 'use strict';
 
 var assert = require('assert'),
+    path = require('path'),
+    fs = require('fs'),
+    basicAuth = require('basic-auth'),
     database = require('./database.js'),
+    github = require('./github.js'),
+    tasks = require('./tasks.js'),
     lastMile = require('connect-lastmile'),
     HttpError = lastMile.HttpError,
     HttpSuccess = lastMile.HttpSuccess;
@@ -10,92 +15,165 @@ module.exports = exports = {
     status: status,
     auth: auth,
 
-    user: {
-        get: userGet,
-        update: userUpdate
+    profile: {
+        get: profileGet,
+        update: profileUpdate
     },
 
-    repo: {
-        add: repoAdd,
-        get: repoGet,
-        list: repoList,
-        update: repoUpdate,
-        remove: repoRemove
+    projects: {
+        list: projectsList,
+        get: projectsGet,
+        update: projectsUpdate
+    },
+
+    releases: {
+        list: releasesList,
+        get: releasesGet
     }
 };
+
+const LDAP_URL = process.env.LDAP_URL;
+const LDAP_USERS_BASE_DN = process.env.LDAP_USERS_BASE_DN;
+const LOCAL_AUTH_FILE = path.resolve('users.json');
+
+var users = {};
+
+var AUTH_METHOD = (LDAP_URL && LDAP_USERS_BASE_DN) ? 'ldap' : 'local';
+if (AUTH_METHOD === 'ldap') {
+    console.log('Use ldap auth');
+} else {
+    console.log(`Use local auth file ${LOCAL_AUTH_FILE}`);
+
+    try {
+        users = JSON.parse(fs.readFileSync(LOCAL_AUTH_FILE, 'utf8'));
+    } catch (e) {
+        let template = [{ username: 'username', email: 'test@example.com', password: 'password' }];
+        console.log(`Unable to read local auth file. Create a JSON file at ${LOCAL_AUTH_FILE} with\n%s`, JSON.stringify(template, null, 4));
+
+        process.exit(1);
+    }
+}
 
 function status(req, res, next) {
     next(new HttpSuccess(200, {}));
 }
 
 function auth(req, res, next) {
-    database.user.getAll(function (error, results) {
-        if (error) return next(new HttpError(500, error));
+    var credentials = basicAuth(req);
 
-        req.user = results[0];
+    if (!credentials) return next(new HttpError(400, 'Basic auth required'));
 
-        next();
-    });
+    if (AUTH_METHOD === 'ldap') {
+        // TODO
+    } else {
+        let user = users.find(function (u) { return (u.username === credentials.name || u.email === credentials.name) && u.password === credentials.pass; });
+        if (!user) return next(new HttpError(401, 'Invalid credentials'));
+
+        database.users.get(user.username, function (error, result) {
+            if (error) {
+                console.error(error);
+                return next(new HttpError(500, error));
+            }
+
+            // user already exists
+            if (result) {
+                req.user = result;
+                return next();
+            }
+
+            database.users.add({ id: user.username, email: user.email }, function (error, result) {
+                if (error) return next(new HttpError(500, error));
+
+                req.user = result;
+
+                return next();
+            });
+        });
+    }
 }
 
-function userGet(req, res, next) {
+function profileGet(req, res, next) {
     assert.strictEqual(typeof req.user, 'object');
 
     next(new HttpSuccess(200, { user: req.user }));
 }
 
-function userUpdate(req, res, next) {
+function profileUpdate(req, res, next) {
     assert.strictEqual(typeof req.user, 'object');
 
-    next(new HttpError(500, 'not implemented'));
-}
+    github.verifyToken(req.body.githubToken, function (error) {
+        if (error) return next(new HttpError(402, error));
 
-function repoAdd(req, res, next) {
-    assert.strictEqual(typeof req.user, 'object');
+        database.users.update(req.user.id, req.body, function (error) {
+            if (error) return next(new HttpError(500, error));
 
-    if (typeof req.body.repo !== 'object') return next(new HttpError(400, 'missing repo object'));
-    if (typeof req.body.repo.name !== 'string') return next(new HttpError(400, 'missing name string'));
-    if (typeof req.body.repo.type !== 'string') return next(new HttpError(400, 'missing type string'));
-    if (typeof req.body.repo.identifier !== 'string') return next(new HttpError(400, 'missing identifier string'));
+            req.user.email = req.body.email;
+            req.user.githubToken = req.body.githubToken;
 
-    req.body.repo.enabled = true;
+            next(new HttpSuccess(202, {}));
 
-    database.repo.add(req.user.id, req.body.repo, function (error, result) {
-        if (error) return next(new HttpError(500, error));
+            // trigger a sync for the user
+            tasks.syncStarredByUser(req.user, function (error) {
+                if (error) console.error(error);
 
-        next(new HttpSuccess(201, { repo: result }));
+                tasks.syncReleasesByUser(req.user, function (error) {
+                    if (error) console.error(error);
+                });
+            });
+        });
     });
 }
 
-function repoGet(req, res, next) {
+function projectsList(req, res, next) {
     assert.strictEqual(typeof req.user, 'object');
 
-    database.repo.get(req.user.id, req.params.repoId, function (error, result) {
+    database.projects.list(req.user.id, function (error, result) {
         if (error) return next(new HttpError(500, error));
 
-        next(new HttpSuccess(200, { repo: result }));
+        next(new HttpSuccess(200, { projects: result }));
     });
 }
 
-function repoList(req, res, next) {
+function projectsGet(req, res, next) {
     assert.strictEqual(typeof req.user, 'object');
+    assert.strictEqual(typeof req.params.projectId, 'string');
 
-    database.repo.get(req.user.id, function (error, result) {
+    database.projects.get(req.user.id, req.params.projectId, function (error, result) {
         if (error) return next(new HttpError(500, error));
 
-        next(new HttpSuccess(200, { repos: result }));
+        next(new HttpSuccess(200, { project: result }));
     });
 }
 
-function repoUpdate(req, res, next) {
+function projectsUpdate(req, res, next) {
     assert.strictEqual(typeof req.user, 'object');
+    assert.strictEqual(typeof req.params.projectId, 'string');
 
-    next(new HttpError(500, 'not implemented'));
+    database.projects.update(req.params.projectId, req.body.project, function (error) {
+        if (error) return next(new HttpError(500, error));
+
+        next(new HttpSuccess(202, {}));
+    });
 }
 
-function repoRemove(req, res, next) {
+function releasesList(req, res, next) {
     assert.strictEqual(typeof req.user, 'object');
 
-    next(new HttpError(500, 'not implemented'));
+    database.releases.list(req.user.id, function (error, result) {
+        if (error) return next(new HttpError(500, error));
 
+        next(new HttpSuccess(200, { releases: result }));
+    });
+}
+
+function releasesGet(req, res, next) {
+    assert.strictEqual(typeof req.user, 'object');
+    assert.strictEqual(typeof req.params.projectId, 'string');
+    assert.strictEqual(typeof req.params.releaseId, 'string');
+
+    database.releases.get(req.params.releaseId, function (error, result) {
+        if (error) return next(new HttpError(500, error));
+
+        next(new HttpSuccess(200, { release: result }));
+    });
 }

@@ -20,13 +20,13 @@ function start(callback) {
     var app = express();
 
     router.get ('/api/v1/status', routes.status);
-    router.get ('/api/v1/profile', routes.auth, routes.user.get);
-    router.post('/api/v1/profile', routes.auth, routes.user.update);
-    router.get ('/api/v1/repos', routes.auth, routes.repo.list);
-    router.post('/api/v1/repos', routes.auth, routes.repo.add);
-    router.get ('/api/v1/repos/:repoId', routes.auth, routes.repo.get);
-    router.post('/api/v1/repos/:repoId', routes.auth, routes.repo.update);
-    router.del ('/api/v1/repos/:repoId', routes.auth, routes.repo.remove);
+    router.get ('/api/v1/profile', routes.auth, routes.profile.get);
+    router.post('/api/v1/profile', routes.auth, routes.profile.update);
+    router.get ('/api/v1/projects', routes.auth, routes.projects.list);
+    router.get ('/api/v1/projects/:projectId', routes.auth, routes.projects.get);
+    router.post('/api/v1/projects/:projectId', routes.auth, routes.projects.update);
+    router.get ('/api/v1/projects/:projectId/releases', routes.auth, routes.releases.list);
+    router.get ('/api/v1/projects/:projectId/releases/:releaseId', routes.auth, routes.releases.get);
 
     app
         .use(connectTimeout(10000, { respond: true }))
