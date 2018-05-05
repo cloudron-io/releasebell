@@ -11,13 +11,11 @@ var server = require('./backend/server.js'),
 database.init(function (error) {
     if (error) return console.error('Failed to init database.', error);
 
-    tasks.init(function (error) {
-        if (error) return console.error('Failed to init tasks.', error);
+    tasks.run();
 
-        server.start(function (error) {
-            if (error) return console.error('Failed to start server.', error);
+    server.start(function (error) {
+        if (error) return console.error('Failed to start server.', error);
 
-            console.log('Server is up and running.');
-        });
+        console.log('Server is up and running.');
     });
 });

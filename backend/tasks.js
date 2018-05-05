@@ -6,7 +6,7 @@ var assert = require('assert'),
     github = require('./github.js');
 
 module.exports = exports = {
-    init: init,
+    run: run,
     syncStarred: syncStarred,
     syncStarredByUser: syncStarredByUser,
     syncReleases: syncReleases,
@@ -14,11 +14,8 @@ module.exports = exports = {
     sendNotifications: sendNotifications
 };
 
-function init(callback) {
-    assert.strictEqual(typeof callback, 'function');
-
-    // callback early for now
-    callback();
+function run() {
+    console.log('Run periodic tasks...');
 
     syncStarred(function (error) {
         if (error) console.error(error);
@@ -28,6 +25,9 @@ function init(callback) {
 
             sendNotifications(function (error) {
                 if (error) console.error(error);
+
+                // just keep polling for good
+                setTimeout(run, 60 * 1000);
             });
         });
     });

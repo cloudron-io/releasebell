@@ -3,6 +3,7 @@
 var assert = require('assert'),
     path = require('path'),
     fs = require('fs'),
+    ldapjs = require('ldapjs'),
     basicAuth = require('basic-auth'),
     database = require('./database.js'),
     github = require('./github.js'),
@@ -63,12 +64,7 @@ function auth(req, res, next) {
 
     if (!credentials) return next(new HttpError(400, 'Basic auth required'));
 
-    if (AUTH_METHOD === 'ldap') {
-        // TODO
-    } else {
-        let user = users.find(function (u) { return (u.username === credentials.name || u.email === credentials.name) && u.password === credentials.pass; });
-        if (!user) return next(new HttpError(401, 'Invalid credentials'));
-
+    function returnOrCreateUser(user) {
         database.users.get(user.username, function (error, result) {
             if (error) {
                 console.error(error);
@@ -89,6 +85,27 @@ function auth(req, res, next) {
                 return next();
             });
         });
+    }
+
+    if (AUTH_METHOD === 'ldap') {
+        var ldapClient = ldapjs.createClient({ url: process.env.LDAP_URL });
+        ldapClient.on('error', function (error) {
+            console.error('LDAP error', error);
+            next(new HttpError(500, error));
+        });
+
+        var ldapDn = 'cn=' + credentials.name + ',' + process.env.LDAP_USERS_BASE_DN;
+        ldapClient.bind(ldapDn, credentials.pass, function (error) {
+            if (error) return next(new HttpError(401, 'Invalid credentials'));
+
+            // TODO fetch real profile here
+            returnOrCreateUser({ username: credentials.name, email: 'test@example.com' });
+        });
+    } else {
+        let user = users.find(function (u) { return (u.username === credentials.name || u.email === credentials.name) && u.password === credentials.pass; });
+        if (!user) return next(new HttpError(401, 'Invalid credentials'));
+
+        returnOrCreateUser(user);
     }
 }
 
