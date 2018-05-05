@@ -18,7 +18,8 @@
   "icon": "logo.png",
   "addons": {
     "ldap": {},
-    "mysql": {}
+    "mysql": {},
+    "sendmail": {}
   },
   "mediaLinks": [
   ],
