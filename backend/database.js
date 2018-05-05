@@ -38,12 +38,19 @@ var db = null;
 function init(callback) {
     assert.strictEqual(typeof callback, 'function');
 
+    var config = require('../database.json');
+    if (!config.defaultEnv) {
+        console.error('defaultEnv missing from database.json');
+        process.exit(1);
+    }
+
     db = mysql.createPool({
         connectionLimit: 10,
-        host: 'localhost',
-        user: 'root',
-        password: '',
-        database: 'releasebell'
+        host: config[config.defaultEnv].host,
+        port: config[config.defaultEnv].port,
+        user: config[config.defaultEnv].user,
+        password: config[config.defaultEnv].password,
+        database: config[config.defaultEnv].database
     });
 
     callback();
