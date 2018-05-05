@@ -1,0 +1,20 @@
+{
+  "name": "releasebell",
+  "version": "1.0.0",
+  "description": "Sibbell alternative",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "connect-lastmile": "^1.0.2",
+    "connect-timeout": "^1.9.0",
+    "express": "^4.16.3",
+    "ldapjs": "^1.0.2",
+    "nodemailer": "^4.6.4",
+    "supererror": "^0.7.2",
+    "uuid": "^3.2.1"
+  }
+}
