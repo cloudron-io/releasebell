@@ -1,0 +1,26 @@
+{
+  "id": "io.cloudron.releasebell",
+  "title": "ReleaseBell",
+  "author": "Cloudron Team",
+  "description": "file://DESCRIPTION.md",
+  "tagline": "Release notification service",
+  "tags": [
+    "tags",
+    "releases",
+    "github"
+  ],
+  "version": "1.0.0",
+  "healthCheckPath": "/api/v1/status",
+  "httpPort": 3000,
+  "manifestVersion": 1,
+  "website": "https://git.cloudron.io/cloudron/releasebell",
+  "contactEmail": "support@cloudron.io",
+  "icon": "logo.png",
+  "addons": {
+    "ldap": {},
+    "mysql": {}
+  },
+  "mediaLinks": [
+  ],
+  "changelog": "file://CHANGELOG"
+}
