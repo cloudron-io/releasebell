@@ -2,8 +2,11 @@
 
 var assert = require('assert'),
     async = require('async'),
+    fs = require('fs'),
+    path = require('path'),
     database = require('./database.js'),
     nodemailer = require('nodemailer'),
+    handlebars = require('handlebars'),
     smtpTransport = require('nodemailer-smtp-transport'),
     github = require('./github.js');
 
@@ -22,6 +25,8 @@ if (CAN_SEND_EMAIL) {
 } else {
     console.log('No email configuration found. Set ');
 }
+
+const EMAIL_TEMPLATE = handlebars.compile(fs.readFileSync(path.resolve(__dirname, 'notification.template')));
 
 function run() {
     console.log('Run periodic tasks...');
@@ -184,11 +189,15 @@ function sendNotificationEmail(release, callback) {
                 }
             }));
 
+            const versionLink = `https://github.com/${project.name}`;
+            const settingsLink = process.env.APP_ORIGIN || '';
+
             var mail = {
                 from: process.env.MAIL_FROM,
                 to: user.email,
                 subject: `${project.name} ${release.version} released`,
-                text: `A new release at ${project.name} with version ${release.version} has been made.`
+                text: `A new release at ${project.name} with version ${release.version} was published. Read more about this release at ${versionLink}`,
+                html: EMAIL_TEMPLATE({ project: project, release: release, versionLink: versionLink, settingsLink: settingsLink })
             };
 
             console.log('Sending email:', mail);
