@@ -1,6 +1,6 @@
 {
-  "id": "io.cloudron.releasebell",
-  "title": "ReleaseBell",
+  "id": "io.cloudron.stargazer",
+  "title": "Stargazer",
   "author": "Cloudron Team",
   "description": "file://DESCRIPTION.md",
   "tagline": "Release notification service",
@@ -13,7 +13,7 @@
   "healthCheckPath": "/api/v1/status",
   "httpPort": 3000,
   "manifestVersion": 1,
-  "website": "https://git.cloudron.io/cloudron/releasebell",
+  "website": "https://git.cloudron.io/cloudron/stargazer",
   "contactEmail": "support@cloudron.io",
   "icon": "logo.png",
   "addons": {
