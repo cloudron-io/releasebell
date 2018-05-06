@@ -3,6 +3,8 @@
 var assert = require('assert'),
     async = require('async'),
     database = require('./database.js'),
+    nodemailer = require('nodemailer'),
+    smtpTransport = require('nodemailer-smtp-transport'),
     github = require('./github.js');
 
 module.exports = exports = {
@@ -13,6 +15,13 @@ module.exports = exports = {
     syncReleasesByUser: syncReleasesByUser,
     sendNotifications: sendNotifications
 };
+
+const CAN_SEND_EMAIL = (process.env.MAIL_SMTP_SERVER && process.env.MAIL_SMTP_PORT && process.env.MAIL_SMTPS_PORT && process.env.MAIL_SMTP_USERNAME && process.env.MAIL_SMTP_PASSWORD && process.env.MAIL_FROM && process.env.MAIL_DOMAIN);
+if (CAN_SEND_EMAIL) {
+    console.log(`Can send emails. Email notifications are sent out as ${process.env.MAIL_FROM}`);
+} else {
+    console.log('No email configuration found. Set ');
+}
 
 function run() {
     console.log('Run periodic tasks...');
@@ -154,6 +163,45 @@ function syncReleases(callback) {
     });
 }
 
+function sendNotificationEmail(release, callback) {
+    assert.strictEqual(typeof release, 'object');
+    assert.strictEqual(typeof callback, 'function');
+
+    if (!CAN_SEND_EMAIL) return callback();
+
+    database.projects.get(release.projectId, function (error, project) {
+        if (error) return callback(error);
+
+        database.users.get(project.userId, function (error, user) {
+            if (error) return callback(error);
+
+            var transport = nodemailer.createTransport(smtpTransport({
+                host: process.env.MAIL_SMTP_SERVER,
+                port: process.env.MAIL_SMTP_PORT,
+                auth: {
+                    user: process.env.MAIL_SMTP_USERNAME,
+                    pass: process.env.MAIL_SMTP_PASSWORD
+                }
+            }));
+
+            var mail = {
+                from: process.env.MAIL_FROM,
+                to: user.email,
+                subject: `${project.name} ${release.version} released`,
+                text: `A new release at ${project.name} with version ${release.version} has been made.`
+            };
+
+            console.log('Sending email:', mail);
+
+            transport.sendMail(mail, function (error) {
+                if (error) return callback(error);
+
+                database.releases.update(release.id, { notified: true }, callback);
+            });
+        });
+    });
+}
+
 function sendNotifications(callback) {
     assert.strictEqual(typeof callback, 'function');
 
@@ -162,6 +210,13 @@ function sendNotifications(callback) {
 
         console.log('Pending release notifications:', result);
 
-        callback();
+        async.each(result, function (release, callback) {
+            sendNotificationEmail(release, function (error) {
+                if (error) console.error(error);
+
+                // ignore individual errors
+                callback();
+            });
+        }, callback);
     });
 }
