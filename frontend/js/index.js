@@ -27,6 +27,8 @@ var app = new Vue({
                 that.loginSubmitBusy = false;
 
                 if (error && error.status === 401) {
+                    that.$refs.loginInput.focus();
+                    that.$message.error('Invalid username or password');
                     that.login.username = '';
                     that.login.password = '';
                     return;

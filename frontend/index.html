@@ -28,7 +28,7 @@
       <el-row type="flex" class="row-bg" justify="center">
         <el-col :span="6">
           <el-form ref="form" :model="login" label-position="top" @submit.native.prevent>
-            <el-form-item label="Username"><el-input v-model="login.username" required autofocus></el-input></el-form-item>
+            <el-form-item label="Username"><el-input v-model="login.username" ref="loginInput" required></el-input></el-form-item>
             <el-form-item label="Password"><el-input v-model="login.password" type="password" required></el-input></el-form-item>
             <el-form-item><el-button type="primary" native-type="submit" @click="onLogin" style="width: 120px;" :disabled="loginSubmitBusy"><i class="el-icon-loading" v-show="loginSubmitBusy"></i><span v-show="!loginSubmitBusy">Login</span></el-button></el-form-item>
           </el-form>
