@@ -5,7 +5,7 @@
 
 var DEFAULT_VIEW = 'welcome';
 
-var app = new Vue({
+new Vue({
     el: '#app',
     data: {
         activeView: '',
@@ -103,33 +103,31 @@ var app = new Vue({
     mounted: function () {
         var that = this;
 
-        this.$nextTick(function () {
-            that.login.username = window.localStorage.username || '';
-            that.login.password = window.localStorage.password || '';
+        that.login.username = window.localStorage.username || '';
+        that.login.password = window.localStorage.password || '';
 
-            if (!that.login.username || !that.login.password) {
+        if (!that.login.username || !that.login.password) {
+            that.profile = null;
+            that.handleViewSelect('login');
+            return;
+        }
+
+        superagent.get('/api/v1/profile').auth(that.login.username, that.login.password).end(function (error, result) {
+            if (error && error.status === 401) {
+                // clear the local storage on wrong credentials
+                delete window.localStorage.username;
+                delete window.localStorage.password;
+
                 that.profile = null;
                 that.handleViewSelect('login');
+
                 return;
             }
+            if (error) return that.onError(error);
+            if (result.statusCode !== 200) that.onError('Unexpected response: ' + result.statusCode + ' ' + result.text);
 
-            superagent.get('/api/v1/profile').auth(that.login.username, that.login.password).end(function (error, result) {
-                if (error && error.status === 401) {
-                    // clear the local storage on wrong credentials
-                    delete window.localStorage.username;
-                    delete window.localStorage.password;
-
-                    that.profile = null;
-                    that.handleViewSelect('login');
-
-                    return;
-                }
-                if (error) return that.onError(error);
-                if (result.statusCode !== 200) that.onError('Unexpected response: ' + result.statusCode + ' ' + result.text);
-
-                that.profile = result.body.user;
-                that.handleViewSelect(DEFAULT_VIEW);
-            });
+            that.profile = result.body.user;
+            that.handleViewSelect(DEFAULT_VIEW);
         });
     }
 });
