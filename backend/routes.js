@@ -91,15 +91,33 @@ function auth(req, res, next) {
         var ldapClient = ldapjs.createClient({ url: process.env.LDAP_URL });
         ldapClient.on('error', function (error) {
             console.error('LDAP error', error);
-            next(new HttpError(500, error));
         });
 
-        var ldapDn = 'cn=' + credentials.name + ',' + process.env.LDAP_USERS_BASE_DN;
-        ldapClient.bind(ldapDn, credentials.pass, function (error) {
-            if (error) return next(new HttpError(401, 'Invalid credentials'));
+        ldapClient.bind(process.env.LDAP_BIND_DN, process.env.LDAP_BIND_PASSWORD, function (error) {
+            if (error) return next(new HttpError(500, error));
 
-            // TODO fetch real profile here
-            returnOrCreateUser({ username: credentials.name, email: 'test@example.com' });
+            var filter = `(|(uid=${credentials.name})(mail=${credentials.name})(username=${credentials.name})(sAMAccountName=${credentials.name}))`;
+            ldapClient.search(process.env.LDAP_USERS_BASE_DN, { filter: filter }, function (error, result) {
+                if (error) return next(new HttpError(500, error));
+
+                var items = [];
+
+                result.on('searchEntry', function(entry) { items.push(entry.object); });
+                result.on('error', function (error) { next(new HttpError(500, error)); });
+                result.on('end', function (result) {
+                    if (result.status !== 0) return next(new HttpError(500, error));
+                    if (items.length === 0) return next(new HttpError(401, 'Invalid credentials'));
+
+                    // pick the first found
+                    var user = items[0];
+
+                    ldapClient.bind(user.dn, credentials.pass, function (error) {
+                        if (error) return next(new HttpError(401, 'Invalid credentials'));
+
+                        returnOrCreateUser({ username: user.username, email: user.mail });
+                    });
+                });
+            });
         });
     } else {
         let user = users.find(function (u) { return (u.username === credentials.name || u.email === credentials.name) && u.password === credentials.pass; });
