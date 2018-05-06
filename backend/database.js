@@ -88,12 +88,16 @@ function projectsGet(projectId, callback) {
     });
 }
 
+// we only allow updating the enabled flag for now
 function projectsUpdate(projectId, data, callback) {
     assert.strictEqual(typeof projectId, 'string');
     assert.strictEqual(typeof data, 'object');
     assert.strictEqual(typeof callback, 'function');
 
-    callback();
+    db.query('UPDATE projects SET enabled=? WHERE id=?', [ data.enabled, projectId ], function (error) {
+        if (error) return callback(error);
+        callback(null);
+    });
 }
 
 function projectsRemove(projectId, callback) {
@@ -200,6 +204,7 @@ function releasesGet(releaseId, callback) {
     });
 }
 
+// we only allow updating the notfied flag for now
 function releasesUpdate(releaseId, data, callback) {
     assert.strictEqual(typeof releaseId, 'string');
     assert.strictEqual(typeof data, 'object');

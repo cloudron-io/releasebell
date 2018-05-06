@@ -184,7 +184,7 @@ function projectsUpdate(req, res, next) {
     assert.strictEqual(typeof req.user, 'object');
     assert.strictEqual(typeof req.params.projectId, 'string');
 
-    database.projects.update(req.params.projectId, req.body.project, function (error) {
+    database.projects.update(req.params.projectId, req.body, function (error) {
         if (error) return next(new HttpError(500, error));
 
         next(new HttpSuccess(202, {}));

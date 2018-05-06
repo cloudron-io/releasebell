@@ -96,8 +96,20 @@ new Vue({
                 this.login.password = '';
             }
         },
-        setProjectState: function (projectId, state) {
-            console.log(projectId, state);
+        setProjectState: function (projectId, state, scope) {
+            var that = this;
+
+            scope.row.busy = true;
+
+            superagent.post('/api/v1/projects/' + projectId).auth(this.login.username, this.login.password).send({ enabled: state }).end(function (error, result) {
+                scope.row.busy = false;
+
+                if (error) return that.onError(error);
+                if (result.statusCode !== 202) return that.onError('Unexpected response: ' + result.statusCode + ' ' + result.text);
+
+                // update the ui now
+                that.projects.find(function (p) { return p.id === projectId; }).enabled = state;
+            });
         }
     },
     mounted: function () {

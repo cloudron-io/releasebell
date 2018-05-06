@@ -25,3 +25,7 @@ a:hover, a:focus {
     color: #409EFF;
     text-decoration: none;
 }
+
+.el-table small {
+    padding-right: 30%;
+}
