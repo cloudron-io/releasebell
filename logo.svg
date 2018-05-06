@@ -15,8 +15,8 @@
    version="1.1"
    id="svg8"
    inkscape:version="0.92.2 2405546, 2018-03-11"
-   sodipodi:docname="icon.svg"
-   inkscape:export-filename="/home/nebulon/projects/yellowtent/apps/releasebell-app/icon.png"
+   sodipodi:docname="favicon.svg"
+   inkscape:export-filename="/home/nebulon/projects/yellowtent/apps/releasebell-app/frontend/favicon.png"
    inkscape:export-xdpi="96"
    inkscape:export-ydpi="96">
   <defs
@@ -60,18 +60,18 @@
     <flowRoot
        xml:space="preserve"
        id="flowRoot4518"
-       style="font-style:normal;font-weight:normal;font-size:25px;line-height:25px;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#409eff;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;"
-       transform="matrix(2.8282767,0,0,2.8282767,-24.185659,-283.2636)"><flowRegion
+       style="font-style:normal;font-weight:normal;font-size:25px;line-height:25px;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#409eff;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       transform="matrix(5.7484127,0,0,5.7484127,-119.09008,-782.03853)"><flowRegion
          id="flowRegion4520"
-         style="fill:#409eff;fill-opacity:1;"><rect
+         style="fill:#409eff;fill-opacity:1"><rect
            id="rect4522"
            width="220"
            height="185.71428"
            x="20"
            y="163.42857"
-           style="fill:#409eff;fill-opacity:1;" /></flowRegion><flowPara
+           style="fill:#409eff;fill-opacity:1" /></flowRegion><flowPara
          id="flowPara4526"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:element-icons;-inkscape-font-specification:element-icons;fill:#409eff;fill-opacity:1;"></flowPara></flowRoot>    <flowRoot
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:element-icons;-inkscape-font-specification:element-icons;fill:#409eff;fill-opacity:1"></flowPara></flowRoot>    <flowRoot
        xml:space="preserve"
        id="flowRoot824"
        style="fill:black;stroke:none;stroke-opacity:1;stroke-width:1px;stroke-linejoin:miter;stroke-linecap:butt;fill-opacity:1;font-family:sans-serif;font-style:normal;font-weight:normal;font-size:25px;line-height:25px;letter-spacing:0px;word-spacing:0px"><flowRegion
@@ -81,19 +81,5 @@
            height="82.85714"
            x="71.428574"
            y="-153.71428" /></flowRegion><flowPara
-         id="flowPara830"></flowPara></flowRoot>    <flowRoot
-       xml:space="preserve"
-       id="flowRoot832"
-       style="font-style:normal;font-weight:normal;font-size:25px;line-height:25px;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#409eff;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       transform="matrix(0.90479102,0,0,0.90479102,-66.746534,-48.595178)"><flowRegion
-         id="flowRegion834"
-         style="fill:#409eff;fill-opacity:1"><rect
-           id="rect836"
-           width="268.57144"
-           height="117.14286"
-           x="88.571426"
-           y="337.71429"
-           style="fill:#409eff;fill-opacity:1" /></flowRegion><flowPara
-         id="flowPara838"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Roboto Condensed';-inkscape-font-specification:'Roboto Condensed, ';fill:#409eff;fill-opacity:1">Release Bell</flowPara></flowRoot>  </g>
+         id="flowPara830" /></flowRoot>  </g>
 </svg>
