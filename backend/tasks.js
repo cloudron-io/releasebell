@@ -208,8 +208,6 @@ function sendNotifications(callback) {
     database.releases.listAllPending(function (error, result) {
         if (error) return callback(error);
 
-        console.log('Pending release notifications:', result);
-
         async.each(result, function (release, callback) {
             sendNotificationEmail(release, function (error) {
                 if (error) console.error(error);
