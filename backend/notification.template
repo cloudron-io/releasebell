@@ -32,7 +32,7 @@
     </td>
   </tr>
   <tr>
-    <td bgcolor="#ffffff" style="padding: 30px 30px 30px 30px; color: #c6c6c6; font-family: Helvetica, sans-serif; font-size: 14px;">
+    <td bgcolor="#ffffff" style="padding: 30px 30px 30px 30px; color: #c6c6c6; font-family: Helvetica, sans-serif; font-size: 12px;">
       You received this email because you follow this project on <a href="https://git.cloudron.io/cloudron/releasebell" style="color: #66b1ff; text-decoration: none;"><font color="#66b1ff">ReleaseBell</font></a>.
       If you'd prefer not to receive these emails, you can <a href="{{ settingsLink }}" style="color: #66b1ff; text-decoration: none;"><font color="#66b1ff">change your notification settings</font></a>.
     </td>

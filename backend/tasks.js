@@ -189,7 +189,7 @@ function sendNotificationEmail(release, callback) {
                 }
             }));
 
-            const versionLink = `https://github.com/${project.name}`;
+            const versionLink = `https://github.com/${project.name}/releases/tag/${release.version}`;
             const settingsLink = process.env.APP_ORIGIN || '';
 
             var mail = {
@@ -199,8 +199,6 @@ function sendNotificationEmail(release, callback) {
                 text: `A new release at ${project.name} with version ${release.version} was published. Read more about this release at ${versionLink}`,
                 html: EMAIL_TEMPLATE({ project: project, release: release, versionLink: versionLink, settingsLink: settingsLink })
             };
-
-            console.log('Sending email:', mail);
 
             transport.sendMail(mail, function (error) {
                 if (error) return callback(error);
