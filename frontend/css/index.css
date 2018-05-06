@@ -13,3 +13,13 @@ body > .el-container {
 .el-footer {
     padding: 3px 20px;
 }
+
+a {
+    color: #66b1ff;
+    text-decoration: none;
+}
+
+a:hover, a:focus {
+    color: #409EFF;
+    text-decoration: none;
+}
