@@ -26,7 +26,7 @@ if (CAN_SEND_EMAIL) {
     console.log('No email configuration found. Set ');
 }
 
-const EMAIL_TEMPLATE = handlebars.compile(fs.readFileSync(path.resolve(__dirname, 'notification.template')));
+const EMAIL_TEMPLATE = handlebars.compile(fs.readFileSync(path.resolve(__dirname, 'notification.template'), 'utf8'));
 
 function run() {
     console.log('Run periodic tasks...');
