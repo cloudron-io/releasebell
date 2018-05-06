@@ -19,6 +19,12 @@ var app = new Vue({
         profileSubmitBusy: false
     },
     methods: {
+        onError: function (error) {
+            var message;
+            if (typeof error === 'string') message = error;
+            else if (error.message) message = error.message;
+            this.$message.error(message);
+        },
         onLogin: function () {
             var that = this;
 
@@ -28,13 +34,12 @@ var app = new Vue({
 
                 if (error && error.status === 401) {
                     that.$refs.loginInput.focus();
-                    that.$message.error('Invalid username or password');
                     that.login.username = '';
                     that.login.password = '';
-                    return;
+                    return that.onError('Invalid username or password');
                 }
-                if (error) return console.error(error);
-                if (result.statusCode !== 200) return console.error(result.statusCode, result.text);
+                if (error) return that.onError(error);
+                if (result.statusCode !== 200) return that.onError('Unexpected response: ' + result.statusCode + ' ' + result.text);
 
                 // stash the credentials in the local storage
                 window.localStorage.username = that.login.username;
@@ -60,11 +65,15 @@ var app = new Vue({
             superagent.post('/api/v1/profile').auth(this.login.username, this.login.password).send({ email: this.profile.email, githubToken: this.profile.githubToken }).end(function (error, result) {
                 that.profileSubmitBusy = false;
 
-                if (error && error.status === 402) return console.error('github token invalid');
-                if (error) return console.error(error);
-                if (result.statusCode !== 202) return console.error(result.statusCode, result.text);
+                if (error && error.status === 402) {
+                    that.$refs.githubTokenInput.focus();
+                    return that.onError('Invalid GitHub token provided');
+                }
+                if (error) return that.onError(error);
+                if (result.statusCode !== 202) return that.onError('Unexpected response: ' + result.statusCode + ' ' + result.text);
 
-                console.log('Success');
+                if (that.profile.githubToken) that.$message.success('Done. Your tracked project list will be updated shortly.');
+                else that.$message.success('Saved');
             });
         },
         handleViewSelect: function (key) {
@@ -73,15 +82,18 @@ var app = new Vue({
             if (!this.profile) this.activeView = 'login';
             else this.activeView = key;
 
-            if (key === 'projects') {
+            if (this.activeView === 'projects') {
                 this.projects = null;
 
                 superagent.get('/api/v1/projects').auth(this.login.username, this.login.password).end(function (error, result) {
-                    if (error) return console.error(error);
-                    if (result.statusCode !== 200) return console.error(result.statusCode, result.text);
+                    if (error) return that.onError(error);
+                    if (result.statusCode !== 200) return that.onError('Unexpected response: ' + result.statusCode + ' ' + result.text);
 
                     that.projects = result.body.projects;
                 });
+            } else if (this.activeView === 'login') {
+                this.login.username = '';
+                this.login.password = '';
             }
         },
         setProjectState: function (projectId, state) {
@@ -91,32 +103,33 @@ var app = new Vue({
     mounted: function () {
         var that = this;
 
-        this.login.username = window.localStorage.username || '';
-        this.login.password = window.localStorage.password || '';
+        this.$nextTick(function () {
+            that.login.username = window.localStorage.username || '';
+            that.login.password = window.localStorage.password || '';
 
-        if (!this.login.username || !this.login.password) {
-            this.login.username = '';
-            this.login.password = '';
-            this.profile = null;
-            this.handleViewSelect('login');
-            return;
-        }
-
-        superagent.get('/api/v1/profile').auth(this.login.username, this.login.password).end(function (error, result) {
-            if (error && error.status === 401) {
-                // clear the local storage on wrong credentials
-                delete window.localStorage.username;
-                delete window.localStorage.password;
-
+            if (!that.login.username || !that.login.password) {
                 that.profile = null;
                 that.handleViewSelect('login');
-
                 return;
             }
-            if (error || result.statusCode !== 200) return console.error(error);
 
-            that.profile = result.body.user;
-            that.handleViewSelect(DEFAULT_VIEW);
+            superagent.get('/api/v1/profile').auth(that.login.username, that.login.password).end(function (error, result) {
+                if (error && error.status === 401) {
+                    // clear the local storage on wrong credentials
+                    delete window.localStorage.username;
+                    delete window.localStorage.password;
+
+                    that.profile = null;
+                    that.handleViewSelect('login');
+
+                    return;
+                }
+                if (error) return that.onError(error);
+                if (result.statusCode !== 200) that.onError('Unexpected response: ' + result.statusCode + ' ' + result.text);
+
+                that.profile = result.body.user;
+                that.handleViewSelect(DEFAULT_VIEW);
+            });
         });
     }
 });

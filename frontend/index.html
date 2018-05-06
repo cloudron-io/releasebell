@@ -2,6 +2,8 @@
 <head>
     <title> Release Bell </title>
 
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
     <link rel="icon" type="image/png" href="/favicon.png">
 
     <link rel="stylesheet" href="/css/theme-chalk.css">
@@ -55,8 +57,8 @@
         <el-col :span="10">
           <el-form ref="form" label-width="120px" @submit.native.prevent>
             <el-form-item label="Email" required><el-input v-model="profile.email" type="email"></el-input></el-form-item>
-            <el-form-item label="Github token">
-              <el-input v-model="profile.githubToken"></el-input>
+            <el-form-item label="GitHub token">
+              <el-input v-model="profile.githubToken" ref="githubTokenInput"></el-input>
               <a href="https://github.com/settings/tokens/new?description=ReleaseBell" target="_blank">Generate a GitHub API token</a>
             </el-form-item>
             <el-form-item><el-button type="primary" native-type="submit" @click="onProfileSubmit" style="width: 120px;" :disabled="profileSubmitBusy"><i class="el-icon-loading" v-show="profileSubmitBusy"></i><span v-show="!profileSubmitBusy">Save<span></span></el-button></el-form-item>
@@ -74,7 +76,7 @@
       <center><h1><i class="el-icon-loading"></i></h1></center>
     </div>
   </el-main>
-  <el-footer style="height: 24px">Built by the <a href="https://cloudron.io" target="_blank">Cloudron.io</a> team</el-footer>
+  <el-footer style="height: 24px">Built by the <a href="https://cloudron.io" target="_blank">Cloudron.io</a> team.</el-footer>
 </el-container>
 
 <script src="/js/index.js"></script>
