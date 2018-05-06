@@ -193,7 +193,7 @@ function sendNotificationEmail(release, callback) {
             const settingsLink = process.env.APP_ORIGIN || '';
 
             var mail = {
-                from: process.env.MAIL_FROM,
+                from: `Stargazer <${process.env.MAIL_FROM}>`,
                 to: user.email,
                 subject: `${project.name} ${release.version} released`,
                 text: `A new release at ${project.name} with version ${release.version} was published. Read more about this release at ${versionLink}`,
