@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="512"
+   height="512"
+   viewBox="0 0 135.46666 135.46666"
+   version="1.1"
+   id="svg8"
+   inkscape:version="0.92.2 2405546, 2018-03-11"
+   sodipodi:docname="icon.svg"
+   inkscape:export-filename="/home/nebulon/projects/yellowtent/apps/releasebell-app/icon.png"
+   inkscape:export-xdpi="96"
+   inkscape:export-ydpi="96">
+  <defs
+     id="defs2" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.7"
+     inkscape:cx="-30.239126"
+     inkscape:cy="362.84271"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     units="px"
+     inkscape:window-width="1920"
+     inkscape:window-height="1024"
+     inkscape:window-x="0"
+     inkscape:window-y="30"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-161.53336)">
+    <flowRoot
+       xml:space="preserve"
+       id="flowRoot4518"
+       style="font-style:normal;font-weight:normal;font-size:25px;line-height:25px;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#409eff;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;"
+       transform="matrix(2.8282767,0,0,2.8282767,-24.185659,-283.2636)"><flowRegion
+         id="flowRegion4520"
+         style="fill:#409eff;fill-opacity:1;"><rect
+           id="rect4522"
+           width="220"
+           height="185.71428"
+           x="20"
+           y="163.42857"
+           style="fill:#409eff;fill-opacity:1;" /></flowRegion><flowPara
+         id="flowPara4526"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:element-icons;-inkscape-font-specification:element-icons;fill:#409eff;fill-opacity:1;"></flowPara></flowRoot>    <flowRoot
+       xml:space="preserve"
+       id="flowRoot824"
+       style="fill:black;stroke:none;stroke-opacity:1;stroke-width:1px;stroke-linejoin:miter;stroke-linecap:butt;fill-opacity:1;font-family:sans-serif;font-style:normal;font-weight:normal;font-size:25px;line-height:25px;letter-spacing:0px;word-spacing:0px"><flowRegion
+         id="flowRegion826"><rect
+           id="rect828"
+           width="142.85715"
+           height="82.85714"
+           x="71.428574"
+           y="-153.71428" /></flowRegion><flowPara
+         id="flowPara830"></flowPara></flowRoot>    <flowRoot
+       xml:space="preserve"
+       id="flowRoot832"
+       style="font-style:normal;font-weight:normal;font-size:25px;line-height:25px;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#409eff;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       transform="matrix(0.90479102,0,0,0.90479102,-66.746534,-48.595178)"><flowRegion
+         id="flowRegion834"
+         style="fill:#409eff;fill-opacity:1"><rect
+           id="rect836"
+           width="268.57144"
+           height="117.14286"
+           x="88.571426"
+           y="337.71429"
+           style="fill:#409eff;fill-opacity:1" /></flowRegion><flowPara
+         id="flowPara838"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Roboto Condensed';-inkscape-font-specification:'Roboto Condensed, ';fill:#409eff;fill-opacity:1">Release Bell</flowPara></flowRoot>  </g>
+</svg>
