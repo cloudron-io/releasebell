@@ -13,14 +13,19 @@ var app = new Vue({
             username: '',
             password: ''
         },
+        loginSubmitBusy: false,
         projects: null,
-        profile: {}
+        profile: {},
+        profileSubmitBusy: false
     },
     methods: {
         onLogin: function () {
             var that = this;
 
+            that.loginSubmitBusy = true;
             superagent.get('/api/v1/profile').auth(this.login.username, this.login.password).end(function (error, result) {
+                that.loginSubmitBusy = false;
+
                 if (error && error.status === 401) {
                     that.login.username = '';
                     that.login.password = '';
@@ -47,7 +52,12 @@ var app = new Vue({
             this.handleViewSelect('login');
         },
         onProfileSubmit: function () {
+            var that = this;
+
+            that.profileSubmitBusy = true;
             superagent.post('/api/v1/profile').auth(this.login.username, this.login.password).send({ email: this.profile.email, githubToken: this.profile.githubToken }).end(function (error, result) {
+                that.profileSubmitBusy = false;
+
                 if (error && error.status === 402) return console.error('github token invalid');
                 if (error) return console.error(error);
                 if (result.statusCode !== 202) return console.error(result.statusCode, result.text);

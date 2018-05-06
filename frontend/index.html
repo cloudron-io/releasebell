@@ -30,7 +30,7 @@
           <el-form ref="form" :model="login" label-position="top" @submit.native.prevent>
             <el-form-item label="Username"><el-input v-model="login.username" required autofocus></el-input></el-form-item>
             <el-form-item label="Password"><el-input v-model="login.password" type="password" required></el-input></el-form-item>
-            <el-form-item><el-button type="primary" native-type="submit" @click="onLogin">Login</el-button></el-form-item>
+            <el-form-item><el-button type="primary" native-type="submit" @click="onLogin" style="width: 120px;" :disabled="loginSubmitBusy"><i class="el-icon-loading" v-show="loginSubmitBusy"></i><span v-show="!loginSubmitBusy">Login</span></el-button></el-form-item>
           </el-form>
         </el-col>
       </el-row>
@@ -59,7 +59,7 @@
               <el-input v-model="profile.githubToken"></el-input>
               <a href="https://github.com/settings/tokens/new?description=ReleaseBell" target="_blank">Generate a GitHub API token</a>
             </el-form-item>
-            <el-form-item><el-button type="primary" native-type="submit" @click="onProfileSubmit">Save</el-button></el-form-item>
+            <el-form-item><el-button type="primary" native-type="submit" @click="onProfileSubmit" style="width: 120px;" :disabled="profileSubmitBusy"><i class="el-icon-loading" v-show="profileSubmitBusy"></i><span v-show="!profileSubmitBusy">Save<span></span></el-button></el-form-item>
           </el-form>
         </el-col>
       </el-row>
