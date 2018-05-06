@@ -20,6 +20,7 @@
     "ldapjs": "^1.0.2",
     "mysql": "^2.15.0",
     "nodemailer": "^4.6.4",
+    "nodemailer-smtp-transport": "^2.7.4",
     "supererror": "^0.7.2",
     "uuid": "^3.2.1"
   }
