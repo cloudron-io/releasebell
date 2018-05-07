@@ -17,7 +17,6 @@ function verifyToken(token, callback) {
     var user = api.getUser();
 
     user.listStarredRepos(function (error, result) {
-        console.log(error, result);
         if (error) return callback(error);
         callback();
     });
