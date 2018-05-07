@@ -85,12 +85,20 @@ function syncStarredByUser(user, callback) {
             var newProjects = starredProjects.filter(function (a) { return !trackedProjects.find(function (b) { return a.name === b.name; }); });
             var outdatedProjects = trackedProjects.filter(function (a) { return !starredProjects.find(function (b) { return a.name === b.name; }); });
 
-            async.each(newProjects, function (project, callback) {
-                database.projects.add({ userId: user.id, name: project.name }, function (error, result) {
+            // do not overwhelm github api with async.each() we hit rate limits if we do
+            async.eachSeries(newProjects, function (project, callback) {
+                // we add projects first with release notification disabled
+                database.projects.add({ userId: user.id, name: project.name, enabled: false }, function (error, result) {
                     if (error) return callback(error);
 
                     // force an initial release sync without notification
-                    syncReleasesByProject(user, result, true, callback);
+                    syncReleasesByProject(user, result, function (error) {
+                        // rollback the project record if we couldn't finish the initial sync
+                        if (error) return database.projects.remove(result.id, callback);
+
+                        // now activate the project notifications
+                        database.projects.update(result.id, { enabled: true }, callback);
+                    });
                 });
             }, function (error) {
                 if (error) return callback(error);
@@ -107,17 +115,16 @@ function syncStarredByUser(user, callback) {
     });
 }
 
-function syncReleasesByProject(user, project, notified, callback) {
+function syncReleasesByProject(user, project, callback) {
     assert.strictEqual(typeof user, 'object');
     assert.strictEqual(typeof project, 'object');
-    assert.strictEqual(typeof notified, 'boolean');
     assert.strictEqual(typeof callback, 'function');
 
     github.getReleases(user.githubToken, project, function (error, result) {
         if (error) return callback(error);
 
         // map to internal model
-        var upstreamReleases = result.map(function (r) { return { projectId: project.id, version: r.name }; });
+        var upstreamReleases = result.map(function (r) { return { projectId: project.id, version: r.name, createdAt: r.createdAt }; });
 
         database.releases.list(project.id, function (error, trackedReleases) {
             if (error) return callback(error);
@@ -125,7 +132,9 @@ function syncReleasesByProject(user, project, notified, callback) {
             var newReleases = upstreamReleases.filter(function (a) { return !trackedReleases.find(function (b) { return a.version == b.version; }); });
 
             async.each(newReleases, function (release, callback) {
-                release.notified = notified;
+                // if notifications for this project are enabled, we mark the release as not notified yet
+                release.notified = !project.enabled;
+
                 database.releases.add(release, callback);
             }, callback);
         });
@@ -139,8 +148,8 @@ function syncReleasesByUser(user, callback) {
     database.projects.list(user.id, function (error, result) {
         if (error) return callback(error);
 
-        async.each(result, function (project, callback) {
-            syncReleasesByProject(user, project, false, callback);
+        async.eachSeries(result, function (project, callback) {
+            syncReleasesByProject(user, project, callback);
         }, function (error) {
             if (error) console.error(error);
             callback();
@@ -172,7 +181,10 @@ function sendNotificationEmail(release, callback) {
     assert.strictEqual(typeof release, 'object');
     assert.strictEqual(typeof callback, 'function');
 
-    if (!CAN_SEND_EMAIL) return callback();
+    if (!CAN_SEND_EMAIL) {
+        console.log('Would send email for release', release);
+        return callback();
+    }
 
     database.projects.get(release.projectId, function (error, project) {
         if (error) return callback(error);

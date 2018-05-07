@@ -1,6 +1,7 @@
 'use strict';
 
 var assert = require('assert'),
+    async = require('async'),
     GitHub = require('github-api');
 
 module.exports = exports = {
@@ -42,7 +43,7 @@ function getStarred(token, callback) {
     var user = api.getUser();
 
     user.listStarredRepos().then(function (result) {
-        callback(null, result);
+        callback(null, result.data);
     }, handleError(callback));
 }
 
@@ -55,6 +56,16 @@ function getReleases(token, project, callback) {
     var repo = api.getRepo(project.name);
 
     repo.listTags().then(function (result) {
-        callback(null, result);
+        var releases = result.data;
+
+        async.eachSeries(releases, function (release, callback) {
+            repo.getCommit(release.commit.sha).then(function (result) {
+                release.createdAt = new Date(result.data.committer.date);
+                callback();
+            }, callback);
+        }, function (error) {
+            if (error) return callback(error);
+            callback(null, releases);
+        });
     }, handleError(callback));
 }

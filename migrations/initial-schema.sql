@@ -17,5 +17,6 @@ CREATE TABLE IF NOT EXISTS releases(
     projectId VARCHAR(128) NOT NULL,
     version VARCHAR(512) NOT NULL,
     notified BOOLEAN DEFAULT false,
+    createdAt TIMESTAMP NOT NULL,
     FOREIGN KEY(projectId) REFERENCES projects(id),
     PRIMARY KEY(id));
