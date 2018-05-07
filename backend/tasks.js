@@ -7,6 +7,7 @@ var assert = require('assert'),
     database = require('./database.js'),
     nodemailer = require('nodemailer'),
     handlebars = require('handlebars'),
+    debug = require('debug')('releasebell/tasks'),
     smtpTransport = require('nodemailer-smtp-transport'),
     github = require('./github.js');
 
@@ -22,15 +23,14 @@ if (CAN_SEND_EMAIL) {
 }
 
 const EMAIL_TEMPLATE = handlebars.compile(fs.readFileSync(path.resolve(__dirname, 'notification.template'), 'utf8'));
-var syncTimer = null;
+var tasksActive = false;
 
 function run() {
-    if (syncTimer) {
-        clearTimeout(syncTimer);
-        syncTimer = null;
-    }
+    if (tasksActive) return debug('run: already running');
 
-    console.log('Run periodic tasks...');
+    tasksActive = true;
+
+    debug('run: start');
 
     syncStarred(function (error) {
         if (error) console.error(error);
@@ -42,7 +42,10 @@ function run() {
                 if (error) console.error(error);
 
                 // just keep polling for good
-                syncTimer = setTimeout(run, 60 * 1000);
+                setTimeout(run, 60 * 1000);
+                tasksActive = false;
+
+                debug('run: done');
             });
         });
     });
@@ -125,18 +128,30 @@ function syncReleasesByProject(user, project, callback) {
         if (error) return callback(error);
 
         // map to internal model
-        var upstreamReleases = result.map(function (r) { return { projectId: project.id, version: r.name, createdAt: r.createdAt }; });
+        var upstreamReleases = result.map(function (r) { return { projectId: project.id, version: r.name, createdAt: r.createdAt, sha: r.commit.sha }; });
 
         database.releases.list(project.id, function (error, trackedReleases) {
             if (error) return callback(error);
 
             var newReleases = upstreamReleases.filter(function (a) { return !trackedReleases.find(function (b) { return a.version == b.version; }); });
 
-            async.each(newReleases, function (release, callback) {
-                // if notifications for this project are enabled, we mark the release as not notified yet
-                release.notified = !project.enabled;
+            debug(`syncReleasesByProject: found ${newReleases.length} new releases for project ${project.name}`);
 
-                database.releases.add(release, callback);
+            // only get the full commit for new releases
+            async.eachLimit(newReleases, 10, function (release, callback) {
+                github.getCommit(user.githubToken, project, release.sha, function (error, commit) {
+                    if (error) return callback(error);
+
+                    // if notifications for this project are enabled, we mark the release as not notified yet
+                    release.notified = !project.enabled;
+                    release.createdAt = new Date(commit.committer.date);
+
+                    delete release.sha;
+
+                    debug(`syncReleasesByProject: add for project ${project.name} release`, release);
+
+                    database.releases.add(release, callback);
+                });
             }, callback);
         });
     });

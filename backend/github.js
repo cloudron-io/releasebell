@@ -7,7 +7,8 @@ var assert = require('assert'),
 module.exports = exports = {
     verifyToken: verifyToken,
     getStarred: getStarred,
-    getReleases: getReleases
+    getReleases: getReleases,
+    getCommit: getCommit
 };
 
 // translate some api errors
@@ -56,16 +57,20 @@ function getReleases(token, project, callback) {
     var repo = api.getRepo(project.name);
 
     repo.listTags().then(function (result) {
-        var releases = result.data;
-
-        async.eachSeries(releases, function (release, callback) {
-            repo.getCommit(release.commit.sha).then(function (result) {
-                release.createdAt = new Date(result.data.committer.date);
-                callback();
-            }, callback);
-        }, function (error) {
-            if (error) return callback(error);
-            callback(null, releases);
-        });
+        callback(null, result.data);
     }, handleError(callback));
+}
+
+function getCommit(token, project, sha, callback) {
+    assert.strictEqual(typeof token, 'string');
+    assert.strictEqual(typeof project, 'object');
+    assert.strictEqual(typeof sha, 'string');
+    assert.strictEqual(typeof callback, 'function');
+
+    var api = new GitHub({ token: token });
+    var repo = api.getRepo(project.name);
+
+    repo.getCommit(sha).then(function (result) {
+        callback(null, result.data);
+    }, callback);
 }
