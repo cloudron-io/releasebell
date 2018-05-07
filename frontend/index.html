@@ -50,7 +50,7 @@
             </el-table-column>
             <el-table-column label="" align="right">
               <template slot-scope="scope">
-                <small v-show="!scope.row.enabled">Notifications are disabled</small>
+                <el-tag type="danger" v-show="!scope.row.enabled">Notifications are disabled</el-tag>
                 <el-button type="text" size="small" @click="setProjectState(scope.row.id, !scope.row.enabled, scope)" style="width: 80px;"><i class="el-icon-loading" v-show="scope.row.busy"></i><span v-show="!scope.row.busy">{{ scope.row.enabled ? 'Disable' : 'Enable' }}</span></el-button>
               </template></el-table-column>
           </el-table>
