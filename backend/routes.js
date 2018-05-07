@@ -147,14 +147,8 @@ function profileUpdate(req, res, next) {
 
             next(new HttpSuccess(202, {}));
 
-            // trigger a sync for the user
-            tasks.syncStarredByUser(req.user, function (error) {
-                if (error) console.error(error);
-
-                tasks.syncReleasesByUser(req.user, function (error) {
-                    if (error) console.error(error);
-                });
-            });
+            // kick off a round of syncing for the new github token
+            tasks.run();
         });
     });
 }

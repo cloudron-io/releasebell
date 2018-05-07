@@ -27,8 +27,14 @@ if (CAN_SEND_EMAIL) {
 }
 
 const EMAIL_TEMPLATE = handlebars.compile(fs.readFileSync(path.resolve(__dirname, 'notification.template'), 'utf8'));
+var syncTimer = null;
 
 function run() {
+    if (syncTimer) {
+        clearTimeout(syncTimer);
+        syncTimer = null;
+    }
+
     console.log('Run periodic tasks...');
 
     syncStarred(function (error) {
@@ -41,7 +47,7 @@ function run() {
                 if (error) console.error(error);
 
                 // just keep polling for good
-                setTimeout(run, 60 * 1000);
+                syncTimer = setTimeout(run, 60 * 1000);
             });
         });
     });
