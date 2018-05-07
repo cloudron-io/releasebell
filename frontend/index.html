@@ -1,6 +1,6 @@
 <html>
 <head>
-    <title> Stargazer </title>
+    <title> Release Bell </title>
 
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 
@@ -19,7 +19,7 @@
 <el-container id="app">
   <el-header>
     <el-menu :default-active="activeView" class="el-menu-demo" mode="horizontal" @select="handleViewSelect">
-      <el-menu-item index="welcome"><i class="el-icon-star-off"></i> Stargazer</el-menu-item>
+      <el-menu-item index="welcome"><i class="el-icon-bell"></i> Release Bell</el-menu-item>
       <el-menu-item index="projects" v-show="profile">Projects</el-menu-item>
       <el-menu-item index="profile" v-show="profile">Profile</el-menu-item>
       <el-menu-item index="logout" v-show="profile" style="float: right" @click="onLogout">Logout</el-menu-item>
@@ -64,7 +64,7 @@
             <el-form-item label="Email" required><el-input v-model="profile.email" type="email"></el-input></el-form-item>
             <el-form-item label="GitHub token">
               <el-input v-model="profile.githubToken" ref="githubTokenInput"></el-input>
-              <a href="https://github.com/settings/tokens/new?description=Stargazer" target="_blank">Generate a GitHub API token</a>
+              <a href="https://github.com/settings/tokens/new?description=ReleaseBell" target="_blank">Generate a GitHub API token</a>
             </el-form-item>
             <el-form-item><el-button type="primary" native-type="submit" @click="onProfileSubmit" style="width: 120px;" :disabled="profileSubmitBusy"><i class="el-icon-loading" v-show="profileSubmitBusy"></i><span v-show="!profileSubmitBusy">Save<span></span></el-button></el-form-item>
           </el-form>
@@ -73,7 +73,7 @@
     </div>
     <div v-else-if="activeView === 'welcome'">
       <center>
-        <h1><i class="el-icon-star-off"></i> Welcome to Stargazer</h1>
+        <h1><i class="el-icon-bell"></i> Welcome to Release Bell</h1>
         <p>Set a GitHub token in your <a href="" @click.prevent="handleViewSelect('profile')">profile</a> to start receiving new release notifcations for your starred repos.</p>
       </center>
     </div>
