@@ -29,3 +29,7 @@ a:hover, a:focus {
 .el-table small {
     padding-right: 30%;
 }
+
+.el-table a {
+    color: rgb(96, 98, 102);
+}
