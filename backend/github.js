@@ -1,7 +1,7 @@
 'use strict';
 
 var assert = require('assert'),
-    github = require('gh-got');
+    GitHub = require('github-api');
 
 module.exports = exports = {
     verifyToken: verifyToken,
@@ -13,10 +13,13 @@ function verifyToken(token, callback) {
     assert.strictEqual(typeof token, 'string');
     assert.strictEqual(typeof callback, 'function');
 
-    github('user/starred', { token: token }).then(function (result) {
-        callback(null);
-    }, function (error) {
-        callback(error);
+    var api = new GitHub({ token: token });
+    var user = api.getUser();
+
+    user.listStarredRepos(function (error, result) {
+        console.log(error, result);
+        if (error) return callback(error);
+        callback();
     });
 }
 
@@ -24,10 +27,12 @@ function getStarred(token, callback) {
     assert.strictEqual(typeof token, 'string');
     assert.strictEqual(typeof callback, 'function');
 
-    github('user/starred', { token: token }).then(function (result) {
-        callback(null, result.body);
-    }, function (error) {
-        callback(error);
+    var api = new GitHub({ token: token });
+    var user = api.getUser();
+
+    user.listStarredRepos(function (error, result) {
+        if (error) return callback(error);
+        callback(null, result);
     });
 }
 
@@ -36,9 +41,11 @@ function getReleases(token, project, callback) {
     assert.strictEqual(typeof project, 'object');
     assert.strictEqual(typeof callback, 'function');
 
-    github(`repos/${project.name}/tags`, { token: token }).then(function (result) {
-        callback(null, result.body);
-    }, function (error) {
-        callback(error);
+    var api = new GitHub({ token: token });
+    var repo = api.getRepo(project.name);
+
+    repo.listTags(function (error, result) {
+        if (error) return callback(error);
+        callback(null, result);
     });
 }
