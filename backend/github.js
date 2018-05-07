@@ -9,6 +9,19 @@ module.exports = exports = {
     getReleases: getReleases
 };
 
+// translate some api errors
+function handleError(callback) {
+    return function (error) {
+        if (error.response) {
+            if (error.response.status === 403 && error.response.data.message.indexOf('API rate limit exceeded') === 0) {
+                error.message = 'GitHub rate limit exceeded. Please wait a bit.';
+            }
+        }
+
+        callback(error);
+    };
+}
+
 function verifyToken(token, callback) {
     assert.strictEqual(typeof token, 'string');
     assert.strictEqual(typeof callback, 'function');
@@ -16,10 +29,9 @@ function verifyToken(token, callback) {
     var api = new GitHub({ token: token });
     var user = api.getUser();
 
-    user.listStarredRepos(function (error, result) {
-        if (error) return callback(error);
+    user.listStarredRepos().then(function () {
         callback();
-    });
+    }, handleError(callback));
 }
 
 function getStarred(token, callback) {
@@ -29,10 +41,9 @@ function getStarred(token, callback) {
     var api = new GitHub({ token: token });
     var user = api.getUser();
 
-    user.listStarredRepos(function (error, result) {
-        if (error) return callback(error);
+    user.listStarredRepos().then(function (result) {
         callback(null, result);
-    });
+    }, handleError(callback));
 }
 
 function getReleases(token, project, callback) {
@@ -43,8 +54,7 @@ function getReleases(token, project, callback) {
     var api = new GitHub({ token: token });
     var repo = api.getRepo(project.name);
 
-    repo.listTags(function (error, result) {
-        if (error) return callback(error);
+    repo.listTags().then(function (result) {
         callback(null, result);
-    });
+    }, handleError(callback));
 }
