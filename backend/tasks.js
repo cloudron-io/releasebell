@@ -11,12 +11,7 @@ var assert = require('assert'),
     github = require('./github.js');
 
 module.exports = exports = {
-    run: run,
-    syncStarred: syncStarred,
-    syncStarredByUser: syncStarredByUser,
-    syncReleases: syncReleases,
-    syncReleasesByUser: syncReleasesByUser,
-    sendNotifications: sendNotifications
+    run: run
 };
 
 const CAN_SEND_EMAIL = (process.env.MAIL_SMTP_SERVER && process.env.MAIL_SMTP_PORT && process.env.MAIL_SMTPS_PORT && process.env.MAIL_SMTP_USERNAME && process.env.MAIL_SMTP_PASSWORD && process.env.MAIL_FROM && process.env.MAIL_DOMAIN);
