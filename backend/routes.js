@@ -137,7 +137,7 @@ function profileUpdate(req, res, next) {
     assert.strictEqual(typeof req.user, 'object');
 
     github.verifyToken(req.body.githubToken, function (error) {
-        if (error) return next(new HttpError(402, error));
+        if (error) return next(new HttpError(402, error.message));
 
         database.users.update(req.user.id, req.body, function (error) {
             if (error) return next(new HttpError(500, error));

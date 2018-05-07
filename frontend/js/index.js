@@ -3,7 +3,7 @@
 /* global Vue */
 /* global superagent */
 
-var DEFAULT_VIEW = 'welcome';
+var DEFAULT_VIEW = 'projects';
 
 new Vue({
     el: '#app',
@@ -67,7 +67,11 @@ new Vue({
 
                 if (error && error.status === 402) {
                     that.$refs.githubTokenInput.focus();
-                    return that.onError('Invalid GitHub token provided');
+
+                    if (error.response.body) that.onError(error.response.body);
+                    else that.onError('Invalid GitHub token provided');
+
+                    return;
                 }
                 if (error) return that.onError(error);
                 if (result.statusCode !== 202) return that.onError('Unexpected response: ' + result.statusCode + ' ' + result.text);
