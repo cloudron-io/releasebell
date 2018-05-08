@@ -25,11 +25,6 @@ module.exports = exports = {
         list: projectsList,
         get: projectsGet,
         update: projectsUpdate
-    },
-
-    releases: {
-        list: releasesList,
-        get: releasesGet
     }
 };
 
@@ -182,27 +177,5 @@ function projectsUpdate(req, res, next) {
         if (error) return next(new HttpError(500, error));
 
         next(new HttpSuccess(202, {}));
-    });
-}
-
-function releasesList(req, res, next) {
-    assert.strictEqual(typeof req.user, 'object');
-
-    database.releases.list(req.user.id, function (error, result) {
-        if (error) return next(new HttpError(500, error));
-
-        next(new HttpSuccess(200, { releases: result }));
-    });
-}
-
-function releasesGet(req, res, next) {
-    assert.strictEqual(typeof req.user, 'object');
-    assert.strictEqual(typeof req.params.projectId, 'string');
-    assert.strictEqual(typeof req.params.releaseId, 'string');
-
-    database.releases.get(req.params.releaseId, function (error, result) {
-        if (error) return next(new HttpError(500, error));
-
-        next(new HttpSuccess(200, { release: result }));
     });
 }

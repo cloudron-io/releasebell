@@ -25,8 +25,6 @@ function start(callback) {
     router.get ('/api/v1/projects', routes.auth, routes.projects.list);
     router.get ('/api/v1/projects/:projectId', routes.auth, routes.projects.get);
     router.post('/api/v1/projects/:projectId', routes.auth, routes.projects.update);
-    router.get ('/api/v1/projects/:projectId/releases', routes.auth, routes.releases.list);
-    router.get ('/api/v1/projects/:projectId/releases/:releaseId', routes.auth, routes.releases.get);
 
     app
         .use(connectTimeout(10000, { respond: true }))
