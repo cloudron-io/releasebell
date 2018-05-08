@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS projects(
     userId VARCHAR(128) NOT NULL,
     name VARCHAR(512) NOT NULL,
     enabled BOOLEAN DEFAULT true,
-    lastSuccessfulSyncAt TIMESTAMP,
+    lastSuccessfulSyncAt BIGINT DEFAULT 0,
     FOREIGN KEY(userId) REFERENCES users(id),
     PRIMARY KEY(id));
 
@@ -18,6 +18,6 @@ CREATE TABLE IF NOT EXISTS releases(
     projectId VARCHAR(128) NOT NULL,
     version VARCHAR(512) NOT NULL,
     notified BOOLEAN DEFAULT false,
-    createdAt TIMESTAMP NOT NULL,
+    createdAt BIGINT NOT NULL,
     FOREIGN KEY(projectId) REFERENCES projects(id),
     PRIMARY KEY(id));

@@ -118,7 +118,7 @@ function syncReleasesByProject(user, project, callback) {
     assert.strictEqual(typeof project, 'object');
     assert.strictEqual(typeof callback, 'function');
 
-    debug(`syncReleasesByProject: ${project.name} start sync releases. Last successful sync was at`, project.lastSuccessfulSyncAt);
+    debug(`syncReleasesByProject: ${project.name} start sync releases. Last successful sync was at`, new Date(project.lastSuccessfulSyncAt));
 
     github.getReleases(user.githubToken, project, function (error, result) {
         if (error) return callback(error);
@@ -140,7 +140,7 @@ function syncReleasesByProject(user, project, callback) {
 
                     // before initial successful sync and if notifications for this project are enabled, we mark the release as not notified yet
                     release.notified = !project.lastSuccessfulSyncAt ? true : !project.enabled;
-                    release.createdAt = new Date(commit.committer.date);
+                    release.createdAt = new Date(commit.committer.date).getTime();
 
                     delete release.sha;
 
@@ -154,7 +154,7 @@ function syncReleasesByProject(user, project, callback) {
                 debug(`syncReleasesByProject: ${project.name} successfully synced`);
 
                 // set the last successful sync time
-                database.projects.update(project.id, { lastSuccessfulSyncAt: new Date() }, callback);
+                database.projects.update(project.id, { lastSuccessfulSyncAt: Date.now() }, callback);
             });
         });
     });
