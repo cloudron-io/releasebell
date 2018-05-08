@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS projects(
     userId VARCHAR(128) NOT NULL,
     name VARCHAR(512) NOT NULL,
     enabled BOOLEAN DEFAULT true,
+    lastSuccessfulSyncAt TIMESTAMP,
     FOREIGN KEY(userId) REFERENCES users(id),
     PRIMARY KEY(id));
 

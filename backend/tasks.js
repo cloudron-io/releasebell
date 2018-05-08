@@ -92,17 +92,11 @@ function syncStarredByUser(user, callback) {
             // do not overwhelm github api with async.each() we hit rate limits if we do
             async.eachSeries(newProjects, function (project, callback) {
                 // we add projects first with release notification disabled
-                database.projects.add({ userId: user.id, name: project.name, enabled: false }, function (error, result) {
+                database.projects.add({ userId: user.id, name: project.name }, function (error, result) {
                     if (error) return callback(error);
 
-                    // force an initial release sync without notification
-                    syncReleasesByProject(user, result, function (error) {
-                        // rollback the project record if we couldn't finish the initial sync
-                        if (error) return database.projects.remove(result.id, callback);
-
-                        // now activate the project notifications
-                        database.projects.update(result.id, { enabled: true }, callback);
-                    });
+                    // force an initial release sync
+                    syncReleasesByProject(user, result, callback);
                 });
             }, function (error) {
                 if (error) return callback(error);
@@ -124,6 +118,8 @@ function syncReleasesByProject(user, project, callback) {
     assert.strictEqual(typeof project, 'object');
     assert.strictEqual(typeof callback, 'function');
 
+    debug(`syncReleasesByProject: ${project.name} start sync releases. Last successful sync was at`, project.lastSuccessfulSyncAt);
+
     github.getReleases(user.githubToken, project, function (error, result) {
         if (error) return callback(error);
 
@@ -142,17 +138,24 @@ function syncReleasesByProject(user, project, callback) {
                 github.getCommit(user.githubToken, project, release.sha, function (error, commit) {
                     if (error) return callback(error);
 
-                    // if notifications for this project are enabled, we mark the release as not notified yet
-                    release.notified = !project.enabled;
+                    // before initial successful sync and if notifications for this project are enabled, we mark the release as not notified yet
+                    release.notified = !project.lastSuccessfulSyncAt ? true : !project.enabled;
                     release.createdAt = new Date(commit.committer.date);
 
                     delete release.sha;
 
-                    debug(`syncReleasesByProject: add for project ${project.name} release`, release);
+                    debug(`syncReleasesByProject: ${project.name} add release ${release.version} notified ${release.notified}`);
 
                     database.releases.add(release, callback);
                 });
-            }, callback);
+            }, function (error) {
+                if (error) return callback(error);
+
+                debug(`syncReleasesByProject: ${project.name} successfully synced`);
+
+                // set the last successful sync time
+                database.projects.update(project.id, { lastSuccessfulSyncAt: new Date() }, callback);
+            });
         });
     });
 }

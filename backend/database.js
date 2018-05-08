@@ -50,10 +50,16 @@ function init(callback) {
         port: config[config.defaultEnv].port,
         user: config[config.defaultEnv].user,
         password: config[config.defaultEnv].password,
-        database: config[config.defaultEnv].database
+        database: config[config.defaultEnv].database,
+        dateStrings: true
     });
 
     callback();
+}
+
+function projectPostprocess(p) {
+    if (p.lastSuccessfulSyncAt === '0000-00-00 00:00:00') p.lastSuccessfulSyncAt = 0;
+    return p;
 }
 
 function projectsList(userId, callback) {
@@ -62,6 +68,9 @@ function projectsList(userId, callback) {
 
     db.query('SELECT * FROM projects WHERE userId=?', [ userId ], function (error, result) {
         if (error) return callback(error);
+
+        result.forEach(projectPostprocess);
+
         callback(null, result);
     });
 }
@@ -71,10 +80,12 @@ function projectsAdd(project, callback) {
     assert.strictEqual(typeof callback, 'function');
 
     project.id = uuid();
+    project.enabled = true;
+    project.lastSuccessfulSyncAt = 0;
 
     db.query('INSERT INTO projects SET ?', project, function (error) {
         if (error) return callback(error);
-        callback(null, project);
+        callback(null, projectPostprocess(project));
     });
 }
 
@@ -84,7 +95,7 @@ function projectsGet(projectId, callback) {
 
     db.query('SELECT * FROM projects WHERE id=?', [ projectId ], function (error, result) {
         if (error) return callback(error);
-        callback(null, result[0]);
+        callback(null, projectPostprocess(result[0]));
     });
 }
 
@@ -94,7 +105,7 @@ function projectsUpdate(projectId, data, callback) {
     assert.strictEqual(typeof data, 'object');
     assert.strictEqual(typeof callback, 'function');
 
-    db.query('UPDATE projects SET enabled=? WHERE id=?', [ data.enabled, projectId ], function (error) {
+    db.query('UPDATE projects SET ? WHERE id=?', [ data, projectId ], function (error) {
         if (error) return callback(error);
         callback(null);
     });
@@ -109,7 +120,6 @@ function projectsRemove(projectId, callback) {
 
         db.query('DELETE FROM projects WHERE id=?', [ projectId ], function (error) {
             if (error) return callback(error);
-
             callback();
         });
     });
