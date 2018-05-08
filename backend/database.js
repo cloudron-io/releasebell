@@ -66,7 +66,7 @@ function projectsList(userId, callback) {
     assert.strictEqual(typeof userId, 'string');
     assert.strictEqual(typeof callback, 'function');
 
-    db.query('SELECT * FROM projects WHERE userId=?', [ userId ], function (error, result) {
+    db.query('SELECT projects.*,releases.version,releases.createdAt FROM projects INNER JOIN releases on releases.id = (SELECT releases.id FROM releases WHERE projectId=projects.id ORDER BY createdAt DESC LIMIT 1) WHERE userId=?', [ userId ], function (error, result) {
         if (error) return callback(error);
 
         result.forEach(projectPostprocess);
