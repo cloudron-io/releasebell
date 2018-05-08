@@ -27,8 +27,8 @@
   </el-header>
   <el-main>
     <div v-if="activeView === 'login'">
-      <el-row type="flex" class="row-bg" justify="center">
-        <el-col :span="6">
+      <el-row type="flex" justify="center">
+        <el-col style="max-width: 400px">
           <el-form ref="form" :model="login" label-position="top" @submit.native.prevent>
             <el-form-item label="Username"><el-input v-model="login.username" ref="loginInput" required></el-input></el-form-item>
             <el-form-item label="Password"><el-input v-model="login.password" type="password" required></el-input></el-form-item>
@@ -38,8 +38,8 @@
       </el-row>
     </div>
     <div v-else-if="activeView === 'projects'">
-      <el-row type="flex" class="row-bg" justify="center">
-        <el-col :span="12">
+      <el-row type="flex" justify="center">
+        <el-col style="max-width: 1024px">
           <center v-show="projects === null"><h1><i class="el-icon-loading"></i></h1></center>
           <center v-show="projects && projects.length === 0">No projects found.</center>
           <el-table :data="projects" v-show="projects && projects.length" stripe style="width: 100%" :default-sort="{ prop: 'name', order: 'ascending' }">
@@ -58,8 +58,8 @@
       </el-row>
     </div>
     <div v-else-if="activeView === 'profile'">
-      <el-row type="flex" class="row-bg" justify="center">
-        <el-col :span="10">
+      <el-row type="flex" justify="center">
+        <el-col style="max-width: 600px">
           <el-form ref="form" label-width="120px" @submit.native.prevent>
             <el-form-item label="Email" required><el-input v-model="profile.email" type="email"></el-input></el-form-item>
             <el-form-item label="GitHub token">
@@ -72,10 +72,28 @@
       </el-row>
     </div>
     <div v-else-if="activeView === 'welcome'">
-      <center>
-        <h1><i class="el-icon-bell"></i> Welcome to Release Bell</h1>
-        <p>Set a GitHub token in your <a href="" @click.prevent="handleViewSelect('profile')">profile</a> to start receiving new release notifcations for your starred repos.</p>
-      </center>
+      <el-row type="flex" justify="center">
+        <el-col style="max-width: 1024px">
+          <center v-show="projects === null"><h1><i class="el-icon-loading"></i></h1></center>
+          <center v-show="projects && projects.length === 0">
+              <h1><i class="el-icon-bell"></i> Welcome to Release Bell</h1>
+              <p>Set a GitHub token in your <a href="" @click.prevent="handleViewSelect('profile')">profile</a> to start receiving new release notifcations for your starred repos.</p>
+          </center>
+          <el-table :data="projects" v-show="projects && projects.length" stripe style="width: 100%" :default-sort="{ prop: 'createdAt', order: 'descending' }">
+            <el-table-column prop="name" label="Project Name" sortable>
+              <template slot-scope="scope">
+                <a :href="'https://github.com/' + scope.row.name" target="_blank">{{ scope.row.name }}</a>
+              </template>
+            </el-table-column>
+            <el-table-column prop="version" align="center" label="Last Version" sortable>
+              <template slot-scope="scope">
+                <a :href="'https://github.com/' + scope.row.name + '/releases/tag/' + scope.row.version" target="_blank">{{ scope.row.version }}</a>
+              </template>
+            </el-table-column>
+            <el-table-column prop="createdAt" align="right" label="Released at" sortable :formatter="prettyDate"></el-table-column>
+          </el-table>
+        </el-col>
+      </el-row>
     </div>
     <div v-else>
       <center><h1><i class="el-icon-loading"></i></h1></center>

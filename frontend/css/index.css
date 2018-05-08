@@ -29,3 +29,7 @@ a:hover, a:focus {
 .el-table a {
     color: rgb(96, 98, 102);
 }
+
+.el-table a:hover {
+    color: #66b1ff;
+}
