@@ -3,6 +3,7 @@
 set -eu
 
 export NODE_ENV=production
+export DEBUG="releasebell*"
 
 echo "=> Create database.json"
 cat <<EOF > /run/database.json
