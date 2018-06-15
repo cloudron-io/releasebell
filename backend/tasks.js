@@ -91,7 +91,7 @@ function syncStarredByUser(user, callback) {
 
             // do not overwhelm github api with async.each() we hit rate limits if we do
             async.eachSeries(newProjects, function (project, callback) {
-                debug('syncStarredByUser: adding new project %s for user %s', project.name, user.id);
+                debug(`syncStarredByUser: [${project.name}] is new for user ${user.id}`);
 
                 // we add projects first with release notification disabled
                 database.projects.add({ userId: user.id, name: project.name }, function (error, result) {
@@ -104,7 +104,7 @@ function syncStarredByUser(user, callback) {
                 if (error) return callback(error);
 
                 async.each(outdatedProjects, function (project, callback) {
-                    debug('syncStarredByUser: removing outdated project %s for user %s', project.name, user.id);
+                    debug(`syncStarredByUser: [${project.name}] not starred anymore by ${user.id}`);
 
                     database.projects.remove(project.id, callback);
                 }, function (error) {
@@ -122,7 +122,7 @@ function syncReleasesByProject(user, project, callback) {
     assert.strictEqual(typeof project, 'object');
     assert.strictEqual(typeof callback, 'function');
 
-    debug(`syncReleasesByProject: ${project.name} start sync releases. Last successful sync was at`, new Date(project.lastSuccessfulSyncAt));
+    debug(`syncReleasesByProject: [${project.name}] start sync releases. Last successful sync was at`, new Date(project.lastSuccessfulSyncAt));
 
     github.getReleases(user.githubToken, project, function (error, result) {
         if (error) return callback(error);
@@ -135,7 +135,7 @@ function syncReleasesByProject(user, project, callback) {
 
             var newReleases = upstreamReleases.filter(function (a) { return !trackedReleases.find(function (b) { return a.version == b.version; }); });
 
-            debug(`syncReleasesByProject: found ${newReleases.length} new releases for project ${project.name}`);
+            debug(`syncReleasesByProject: [${project.name}] found ${newReleases.length} new releases`);
 
             // only get the full commit for new releases
             async.eachLimit(newReleases, 10, function (release, callback) {
@@ -148,14 +148,14 @@ function syncReleasesByProject(user, project, callback) {
 
                     delete release.sha;
 
-                    debug(`syncReleasesByProject: ${project.name} add release ${release.version} notified ${release.notified}`);
+                    debug(`syncReleasesByProject: [${project.name}] add release ${release.version} notified ${release.notified}`);
 
                     database.releases.add(release, callback);
                 });
             }, function (error) {
                 if (error) return callback(error);
 
-                debug(`syncReleasesByProject: ${project.name} successfully synced`);
+                debug(`syncReleasesByProject: [${project.name}] successfully synced`);
 
                 // set the last successful sync time
                 database.projects.update(project.id, { lastSuccessfulSyncAt: Date.now() }, callback);
