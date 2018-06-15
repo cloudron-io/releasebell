@@ -101,6 +101,8 @@ new Vue({
             }
         },
         prettyDate: function (row, column, cellValue, index) {
+            if (!cellValue) return '';
+
             var date = new Date(cellValue),
             diff = (((new Date()).getTime() - date.getTime()) / 1000),
             day_diff = Math.floor(diff / 86400);
