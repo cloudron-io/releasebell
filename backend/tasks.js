@@ -91,6 +91,8 @@ function syncStarredByUser(user, callback) {
 
             // do not overwhelm github api with async.each() we hit rate limits if we do
             async.eachSeries(newProjects, function (project, callback) {
+                debug('syncStarredByUser: adding new project %s for user %s', project.name, user.id);
+
                 // we add projects first with release notification disabled
                 database.projects.add({ userId: user.id, name: project.name }, function (error, result) {
                     if (error) return callback(error);
@@ -102,6 +104,8 @@ function syncStarredByUser(user, callback) {
                 if (error) return callback(error);
 
                 async.each(outdatedProjects, function (project, callback) {
+                    debug('syncStarredByUser: removing outdated project %s for user %s', project.name, user.id);
+
                     database.projects.remove(project.id, callback);
                 }, function (error) {
                     if (error) return callback(error);
