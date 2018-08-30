@@ -41,8 +41,8 @@ function run() {
             sendNotifications(function (error) {
                 if (error) console.error(error);
 
-                // just keep polling for good
-                setTimeout(run, 60 * 1000);
+                // just keep polling for good every 5 minutes
+                setTimeout(run, 5 * 60 * 1000);
                 tasksActive = false;
 
                 debug('run: done');
