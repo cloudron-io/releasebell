@@ -17,7 +17,7 @@ Release Bell is a Nodejs app and thus requires Nodejs at least version 6.
 
 ```
 mkdir releasebell
-curl -L https://git.cloudron.io/cloudron/releasebell/-/archive/v1.0.0/releasebell-v1.0.0.tar.gz  | tar zxf - --strip-components 1 -C ./releasebell
+curl -L https://git.cloudron.io/cloudron/releasebell/-/archive/v1.0.1/releasebell-v1.0.1.tar.gz  | tar zxf - --strip-components 1 -C ./releasebell
 cd releasebell
 npm install
 ./index.js
