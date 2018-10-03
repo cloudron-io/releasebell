@@ -3,3 +3,7 @@
 
 [1.0.1]
 * Only check for new releases every 5min to avoid github rate-limits
+
+[1.0.2]
+* Only check for new releases every hour to avoid github rate-limits with many starred projects
+* Check each user one in series to reduce memory usage
