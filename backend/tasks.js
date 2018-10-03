@@ -189,7 +189,7 @@ function syncReleases(callback) {
         // skip users without a github token
         var users = result.filter(function (u) { return !!u.githubToken; });
 
-        async.each(users, function (user, callback) {
+        async.eachSeries(users, function (user, callback) {
             syncReleasesByUser(user, function (error) {
                 if (error) console.error(error);
 
