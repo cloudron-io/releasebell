@@ -15,11 +15,18 @@ module.exports = exports = {
     run: run
 };
 
-const CAN_SEND_EMAIL = (process.env.MAIL_SMTP_SERVER && process.env.MAIL_SMTP_PORT && process.env.MAIL_SMTP_USERNAME && process.env.MAIL_SMTP_PASSWORD && process.env.MAIL_FROM);
+const CAN_SEND_EMAIL = (process.env.MAIL_SMTP_SERVER && process.env.MAIL_SMTP_PORT && process.env.MAIL_FROM);
 if (CAN_SEND_EMAIL) {
     console.log(`Can send emails. Email notifications are sent out as ${process.env.MAIL_FROM}`);
 } else {
-    console.log('No email configuration found. Set ');
+    console.log(`
+No email configuration found. Set the following environment variables:
+    MAIL_SMTP_SERVER
+    MAIL_SMTP_PORT
+    MAIL_SMTP_USERNAME
+    MAIL_SMTP_PASSWORD
+    MAIL_FROM
+    `);
 }
 
 const EMAIL_TEMPLATE = handlebars.compile(fs.readFileSync(path.resolve(__dirname, 'notification.template'), 'utf8'));
