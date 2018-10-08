@@ -11,7 +11,8 @@ module.exports = exports = {
     start: start
 };
 
-function start(callback) {
+function start(port, callback) {
+    assert.strictEqual(typeof port, 'number');
     assert.strictEqual(typeof callback, 'function');
 
     var router = express.Router();
@@ -33,5 +34,5 @@ function start(callback) {
         .use(router)
         .use(express.static('./frontend'))
         .use(lastMile())
-        .listen(3000, callback);
+        .listen(port, callback);
 }
