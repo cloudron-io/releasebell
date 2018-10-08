@@ -7,3 +7,7 @@
 [1.0.2]
 * Only check for new releases every hour to avoid github rate-limits with many starred projects
 * Check each user one in series to reduce memory usage
+
+[1.0.3]
+* Fix project list sorting
+* Update UI library
