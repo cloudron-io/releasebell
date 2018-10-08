@@ -136,6 +136,10 @@ new Vue({
                 // update the ui now
                 that.projects.find(function (p) { return p.id === projectId; }).enabled = state;
             });
+        },
+        sort: function (a, b) {
+            // default sorting uses case-sensitive sorting
+            return a.name.toUpperCase() < b.name.toUpperCase();
         }
     },
     mounted: function () {

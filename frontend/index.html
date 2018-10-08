@@ -42,8 +42,8 @@
         <el-col style="max-width: 1024px">
           <center v-show="projects === null"><h1><i class="el-icon-loading"></i></h1></center>
           <center v-show="projects && projects.length === 0">No projects found.</center>
-          <el-table :data="projects" v-show="projects && projects.length" stripe style="width: 100%" :default-sort="{ prop: 'name', order: 'ascending' }">
-            <el-table-column prop="name" label="Project Name" sortable>
+          <el-table :data="projects" v-show="projects && projects.length" stripe style="width: 100%" :default-sort="{ prop: 'name', order: 'descending' }">
+            <el-table-column prop="name" label="Project Name" sortable :sort-method="sort">
               <template slot-scope="scope">
                 <a :href="'https://github.com/' + scope.row.name" target="_blank">{{ scope.row.name }}</a>
               </template>
@@ -80,7 +80,7 @@
               <p>Set a GitHub token in your <a href="" @click.prevent="handleViewSelect('profile')">profile</a> to start receiving new release notifcations for your starred repos.</p>
           </center>
           <el-table :data="projects" v-show="projects && projects.length" stripe style="width: 100%" :default-sort="{ prop: 'createdAt', order: 'descending' }">
-            <el-table-column prop="name" label="Project Name" sortable>
+            <el-table-column prop="name" label="Project Name" sortable :sort-method="sort">
               <template slot-scope="scope">
                 <a :href="'https://github.com/' + scope.row.name" target="_blank">{{ scope.row.name }}</a>
               </template>
