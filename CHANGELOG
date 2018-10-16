@@ -11,3 +11,6 @@
 [1.0.3]
 * Fix project list sorting
 * Update UI library
+
+[1.1.0]
+* Update to new base image
