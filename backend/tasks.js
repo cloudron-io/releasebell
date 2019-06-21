@@ -15,17 +15,17 @@ module.exports = exports = {
     run: run
 };
 
-const CAN_SEND_EMAIL = (process.env.MAIL_SMTP_SERVER && process.env.MAIL_SMTP_PORT && process.env.MAIL_FROM);
+const CAN_SEND_EMAIL = (process.env.CLOUDRON_MAIL_SMTP_SERVER && process.env.CLOUDRON_MAIL_SMTP_PORT && process.env.CLOUDRON_MAIL_FROM);
 if (CAN_SEND_EMAIL) {
-    console.log(`Can send emails. Email notifications are sent out as ${process.env.MAIL_FROM}`);
+    console.log(`Can send emails. Email notifications are sent out as ${process.env.CLOUDRON_MAIL_FROM}`);
 } else {
     console.log(`
 No email configuration found. Set the following environment variables:
-    MAIL_SMTP_SERVER
-    MAIL_SMTP_PORT
-    MAIL_SMTP_USERNAME
-    MAIL_SMTP_PASSWORD
-    MAIL_FROM
+    CLOUDRON_MAIL_SMTP_SERVER
+    CLOUDRON_MAIL_SMTP_PORT
+    CLOUDRON_MAIL_SMTP_USERNAME
+    CLOUDRON_MAIL_SMTP_PASSWORD
+    CLOUDRON_MAIL_FROM
     `);
 }
 
@@ -223,19 +223,19 @@ function sendNotificationEmail(release, callback) {
             if (error) return callback(error);
 
             var transport = nodemailer.createTransport(smtpTransport({
-                host: process.env.MAIL_SMTP_SERVER,
-                port: process.env.MAIL_SMTP_PORT,
+                host: process.env.CLOUDRON_MAIL_SMTP_SERVER,
+                port: process.env.CLOUDRON_MAIL_SMTP_PORT,
                 auth: {
-                    user: process.env.MAIL_SMTP_USERNAME,
-                    pass: process.env.MAIL_SMTP_PASSWORD
+                    user: process.env.CLOUDRON_MAIL_SMTP_USERNAME,
+                    pass: process.env.CLOUDRON_MAIL_SMTP_PASSWORD
                 }
             }));
 
             const versionLink = `https://github.com/${project.name}/releases/tag/${release.version}`;
-            const settingsLink = process.env.APP_ORIGIN || '';
+            const settingsLink = process.env.CLOUDRON_APP_ORIGIN || '';
 
             var mail = {
-                from: `ReleaseBell <${process.env.MAIL_FROM}>`,
+                from: `ReleaseBell <${process.env.CLOUDRON_MAIL_FROM}>`,
                 to: user.email,
                 subject: `${project.name} ${release.version} released`,
                 text: `A new release at ${project.name} with version ${release.version} was published. Read more about this release at ${versionLink}`,

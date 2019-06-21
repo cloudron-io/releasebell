@@ -10,11 +10,11 @@ cat <<EOF > /run/database.json
 {
     "defaultEnv": "cloudron",
     "cloudron": {
-        "host": "${MYSQL_HOST}",
-        "port": ${MYSQL_PORT},
-        "user": "${MYSQL_USERNAME}",
-        "password": "${MYSQL_PASSWORD}",
-        "database": "${MYSQL_DATABASE}",
+        "host": "${CLOUDRON_MYSQL_HOST}",
+        "port": ${CLOUDRON_MYSQL_PORT},
+        "user": "${CLOUDRON_MYSQL_USERNAME}",
+        "password": "${CLOUDRON_MYSQL_PASSWORD}",
+        "database": "${CLOUDRON_MYSQL_DATABASE}",
         "driver": "mysql",
         "multipleStatements": true
     }

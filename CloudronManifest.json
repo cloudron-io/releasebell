@@ -12,7 +12,7 @@
   "version": "1.1.0",
   "healthCheckPath": "/api/v1/status",
   "httpPort": 3000,
-  "manifestVersion": 1,
+  "manifestVersion": 2,
   "website": "https://releasebell.com",
   "contactEmail": "support@cloudron.io",
   "icon": "logo.png",
@@ -27,5 +27,6 @@
     "https://s3.amazonaws.com/cloudron-app-screenshots/io.cloudron.releasebell/c4ffba79e3b0d71859e07a1da4236436151bdaff/releasebell_3.png",
     "https://s3.amazonaws.com/cloudron-app-screenshots/io.cloudron.releasebell/c4ffba79e3b0d71859e07a1da4236436151bdaff/releasebell_4.png"
   ],
-  "changelog": "file://CHANGELOG"
+  "changelog": "file://CHANGELOG",
+  "minBoxVersion": "4.1.4"
 }
