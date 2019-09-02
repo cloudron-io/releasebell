@@ -29,7 +29,7 @@ new Vue({
             var that = this;
 
             that.loginSubmitBusy = true;
-            superagent.get('/api/v1/profile').auth(this.login.username, this.login.password).end(function (error, result) {
+            superagent.get('/api/v1/profile').query({ username: that.login.username, password: that.login.password }).end(function (error, result) {
                 that.loginSubmitBusy = false;
 
                 if (error && error.status === 401) {
@@ -62,7 +62,7 @@ new Vue({
             var that = this;
 
             that.profileSubmitBusy = true;
-            superagent.post('/api/v1/profile').auth(this.login.username, this.login.password).send({ email: this.profile.email, githubToken: this.profile.githubToken }).end(function (error, result) {
+            superagent.post('/api/v1/profile').query({ username: that.login.username, password: that.login.password }).send({ email: this.profile.email, githubToken: this.profile.githubToken }).end(function (error, result) {
                 that.profileSubmitBusy = false;
 
                 if (error && error.status === 402) {
@@ -89,7 +89,7 @@ new Vue({
             if (this.activeView === 'projects' || this.activeView === 'welcome') {
                 this.projects = null;
 
-                superagent.get('/api/v1/projects').auth(this.login.username, this.login.password).end(function (error, result) {
+                superagent.get('/api/v1/projects').query({ username: that.login.username, password: that.login.password }).end(function (error, result) {
                     if (error) return that.onError(error);
                     if (result.statusCode !== 200) return that.onError('Unexpected response: ' + result.statusCode + ' ' + result.text);
 
@@ -127,7 +127,7 @@ new Vue({
 
             scope.row.busy = true;
 
-            superagent.post('/api/v1/projects/' + projectId).auth(this.login.username, this.login.password).send({ enabled: state }).end(function (error, result) {
+            superagent.post('/api/v1/projects/' + projectId).query({ username: that.login.username, password: that.login.password }).send({ enabled: state }).end(function (error, result) {
                 scope.row.busy = false;
 
                 if (error) return that.onError(error);
@@ -154,7 +154,7 @@ new Vue({
             return;
         }
 
-        superagent.get('/api/v1/profile').auth(that.login.username, that.login.password).end(function (error, result) {
+        superagent.get('/api/v1/profile').query({ username: that.login.username, password: that.login.password }).end(function (error, result) {
             if (error && error.status === 401) {
                 // clear the local storage on wrong credentials
                 delete window.localStorage.username;

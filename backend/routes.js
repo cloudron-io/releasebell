@@ -4,7 +4,6 @@ var assert = require('assert'),
     path = require('path'),
     fs = require('fs'),
     ldapjs = require('ldapjs'),
-    basicAuth = require('basic-auth'),
     database = require('./database.js'),
     github = require('./github.js'),
     tasks = require('./tasks.js'),
@@ -55,9 +54,9 @@ function status(req, res, next) {
 }
 
 function auth(req, res, next) {
-    var credentials = basicAuth(req);
+    var credentials = req.query;
 
-    if (!credentials) return next(new HttpError(400, 'Basic auth required'));
+    if (!credentials.username || !credentials.password) return next(new HttpError(400, 'username and password required'));
 
     function returnOrCreateUser(user) {
         database.users.get(user.username, function (error, result) {
@@ -91,7 +90,7 @@ function auth(req, res, next) {
         ldapClient.bind(process.env.CLOUDRON_LDAP_BIND_DN, process.env.CLOUDRON_LDAP_BIND_PASSWORD, function (error) {
             if (error) return next(new HttpError(500, error));
 
-            var filter = `(|(uid=${credentials.name})(mail=${credentials.name})(username=${credentials.name})(sAMAccountName=${credentials.name}))`;
+            var filter = `(|(uid=${credentials.username})(mail=${credentials.username})(username=${credentials.username})(sAMAccountName=${credentials.username}))`;
             ldapClient.search(process.env.CLOUDRON_LDAP_USERS_BASE_DN, { filter: filter }, function (error, result) {
                 if (error) return next(new HttpError(500, error));
 
@@ -106,7 +105,7 @@ function auth(req, res, next) {
                     // pick the first found
                     var user = items[0];
 
-                    ldapClient.bind(user.dn, credentials.pass, function (error) {
+                    ldapClient.bind(user.dn, credentials.password, function (error) {
                         if (error) return next(new HttpError(401, 'Invalid credentials'));
 
                         returnOrCreateUser({ username: user.username, email: user.mail });
@@ -115,7 +114,7 @@ function auth(req, res, next) {
             });
         });
     } else {
-        let user = users.find(function (u) { return (u.username === credentials.name || u.email === credentials.name) && u.password === credentials.pass; });
+        let user = users.find(function (u) { return (u.username === credentials.username || u.email === credentials.username) && u.password === credentials.password; });
         if (!user) return next(new HttpError(401, 'Invalid credentials'));
 
         returnOrCreateUser(user);
