@@ -24,6 +24,7 @@ function start(port, callback) {
     router.get ('/api/v1/profile', routes.auth, routes.profile.get);
     router.post('/api/v1/profile', routes.auth, routes.profile.update);
     router.get ('/api/v1/projects', routes.auth, routes.projects.list);
+    router.post('/api/v1/projects', routes.auth, routes.projects.add);
     router.get ('/api/v1/projects/:projectId', routes.auth, routes.projects.get);
     router.post('/api/v1/projects/:projectId', routes.auth, routes.projects.update);
 

@@ -21,8 +21,9 @@ module.exports = exports = {
     },
 
     projects: {
-        list: projectsList,
         get: projectsGet,
+        add: projectAdd,
+        list: projectsList,
         update: projectsUpdate
     }
 };
@@ -154,6 +155,25 @@ function projectsList(req, res, next) {
         if (error) return next(new HttpError(500, error));
 
         next(new HttpSuccess(200, { projects: result }));
+    });
+}
+
+function projectAdd(req, res, next) {
+    assert.strictEqual(typeof req.user, 'object');
+
+    if (!req.body.type) return next(new HttpError(400, 'type is required'));
+    if ([ database.PROJECT_TYPE_GITHUB, database.PROJECT_TYPE_GITLAB, database.PROJECT_TYPE_WEBSITE ].indexOf(req.body.type) === -1) return next(new HttpError(400, 'invalid type'));
+
+    const project = {
+        type: req.body.type,
+        userId: req.user.id,
+        name: req.body.name
+    };
+
+    database.projects.add(project, function (error, result) {
+        if (error) return next(new HttpError(500, error));
+
+        next(new HttpSuccess(201, { project: result }));
     });
 }
 

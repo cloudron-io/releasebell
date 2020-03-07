@@ -7,6 +7,10 @@ var assert = require('assert'),
 module.exports = exports = {
     init: init,
 
+    PROJECT_TYPE_GITHUB: 'github',
+    PROJECT_TYPE_GITLAB: 'gitlab',
+    PROJECT_TYPE_WEBSITE: 'website',
+
     users: {
         list: usersList,
         add: usersAdd,

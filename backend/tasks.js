@@ -101,7 +101,7 @@ function syncStarredByUser(user, callback) {
                 debug(`syncStarredByUser: [${project.name}] is new for user ${user.id}`);
 
                 // we add projects first with release notification disabled
-                database.projects.add({ userId: user.id, name: project.name }, function (error, result) {
+                database.projects.add({ type: database.PROJECT_TYPE_GITHUB, userId: user.id, name: project.name }, function (error, result) {
                     if (error) return callback(error);
 
                     // force an initial release sync
@@ -177,6 +177,11 @@ function syncReleasesByUser(user, callback) {
 
     database.projects.list(user.id, function (error, result) {
         if (error) return callback(error);
+
+        if (result.type !== database.PROJECT_TYPE_GITHUB) {
+            debug(`syncReleasesByUser: ignoring ${result.name} of type ${result.type} for now`);
+            return callback();
+        }
 
         async.eachSeries(result, function (project, callback) {
             syncReleasesByProject(user, project, callback);

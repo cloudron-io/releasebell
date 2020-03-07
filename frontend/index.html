@@ -23,6 +23,7 @@
       <el-menu-item index="projects" v-show="profile">Projects</el-menu-item>
       <el-menu-item index="profile" v-show="profile">Profile</el-menu-item>
       <el-menu-item index="logout" v-show="profile" style="float: right" @click="onLogout">Logout</el-menu-item>
+      <el-menu-item index="projectAdd" v-show="profile" style="float: right"><el-button type="primary">Add Project</el-button></el-menu-item>
     </el-menu>
   </el-header>
   <el-main>
@@ -48,6 +49,10 @@
                 <a :href="'https://github.com/' + scope.row.name" target="_blank">{{ scope.row.name }}</a>
               </template>
             </el-table-column>
+            <el-table-column label="Type" sortable :sort-method="sort">
+              <template slot-scope="scope">{{ scope.row.type }}</template>
+            </el-table-column>
+            <!-- <el-table-column prop="type" label="Type" width="150px"></el-table-column> -->
             <el-table-column label="" align="right">
               <template slot-scope="scope">
                 <el-tag type="danger" v-show="!scope.row.enabled">Notifications are disabled</el-tag>
@@ -66,7 +71,26 @@
               <el-input v-model="profile.githubToken" ref="githubTokenInput"></el-input>
               <a href="https://github.com/settings/tokens/new?description=ReleaseBell" target="_blank">Generate a GitHub API token</a>
             </el-form-item>
-            <el-form-item><el-button type="primary" native-type="submit" @click="onProfileSubmit" style="width: 120px;" :disabled="profileSubmitBusy"><i class="el-icon-loading" v-show="profileSubmitBusy"></i><span v-show="!profileSubmitBusy">Save<span></span></el-button></el-form-item>
+            <el-form-item><el-button type="primary" native-type="submit" @click="onProfileSubmit" style="width: 120px;" :disabled="profileSubmitBusy"><i class="el-icon-loading" v-show="profileSubmitBusy"></i><span v-show="!profileSubmitBusy">Save</span></el-button></el-form-item>
+          </el-form>
+        </el-col>
+      </el-row>
+    </div>
+    <div v-else-if="activeView === 'projectAdd'">
+      <el-row type="flex" justify="center">
+        <el-col style="max-width: 600px">
+          <el-form ref="form" label-width="120px" @submit.native.prevent>
+            <el-form-item label="Type" required>
+              <el-select v-model="addProject.type" placeholder="Select">
+                <el-option key="github" label="Github" value="github"></el-option>
+                <el-option key="gitlab" label="GitLab" value="gitlab"></el-option>
+                <el-option key="website" label="Website" value="website"></el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item label="Name" required><el-input v-model="addProject.name" type="text"></el-input></el-form-item>
+            <el-form-item label="Url" required><el-input v-model="addProject.url" type="text"></el-input></el-form-item>
+            <el-form-item><el-button type="primary" native-type="submit" @click="onProjectAdd" style="width: 120px;" :disabled="addProject.busy"><i class="el-icon-loading" v-show="addProject.busy"></i><span v-show="!addProject.busy">Save</span></el-button></el-form-item>
+            <input type="submit" @click="onProjectAdd" v-show="false"/>
           </el-form>
         </el-col>
       </el-row>

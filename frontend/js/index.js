@@ -16,7 +16,13 @@ new Vue({
         loginSubmitBusy: false,
         projects: null,
         profile: {},
-        profileSubmitBusy: false
+        profileSubmitBusy: false,
+        addProject: {
+            busy: false,
+            type: '',
+            name: '',
+            url: ''
+        }
     },
     methods: {
         onError: function (error) {
@@ -78,6 +84,29 @@ new Vue({
 
                 if (that.profile.githubToken) that.$message.success('Done. Your tracked project list will be updated shortly.');
                 else that.$message.success('Saved');
+            });
+        },
+        onProjectAdd: function () {
+            var that = this;
+
+            if (!this.addProject.name || !this.addProject.url) return;
+
+            console.log('Add Project', this.addProject.name, this.addProject.url, this.addProject.type);
+
+            var data = {
+                type: this.addProject.type,
+                name: this.addProject.name,
+                url: this.addProject.url
+            }
+
+            this.addProject.busy = true;
+            superagent.post('/api/v1/projects/').query({ username: that.login.username, password: that.login.password }).send(data).end(function (error, result) {
+                that.addProject.busy = false;
+
+                if (error) return that.onError(error);
+                if (result.statusCode !== 201) return that.onError('Unexpected response: ' + result.statusCode + ' ' + result.text);
+
+                that.handleViewSelect('projects');
             });
         },
         handleViewSelect: function (key) {
