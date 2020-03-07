@@ -42,3 +42,6 @@ EOF
 
 echo "=> Run database migrations"
 ./node_modules/.bin/db-migrate up
+
+echo "=> Start releasebell"
+./index.js
