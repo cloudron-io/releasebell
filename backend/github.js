@@ -47,6 +47,7 @@ function getStarred(token, callback) {
     }, handleError(callback));
 }
 
+// Returns [{ projectId, version, createdAt, sha }]
 function getReleases(token, project, callback) {
     assert.strictEqual(typeof token, 'string');
     assert.strictEqual(typeof project, 'object');
@@ -56,10 +57,11 @@ function getReleases(token, project, callback) {
     var repo = api.getRepo(project.name);
 
     repo.listTags().then(function (result) {
-        callback(null, result.data);
+        callback(null, result.data.map(function (r) { return { projectId: project.id, version: r.name, createdAt: r.createdAt, sha: r.commit.sha }; }));
     }, handleError(callback));
 }
 
+// Returns { createdAt }
 function getCommit(token, project, sha, callback) {
     assert.strictEqual(typeof token, 'string');
     assert.strictEqual(typeof project, 'object');
@@ -70,6 +72,6 @@ function getCommit(token, project, sha, callback) {
     var repo = api.getRepo(project.name);
 
     repo.getCommit(sha).then(function (result) {
-        callback(null, result.data);
+        callback(null, { createdAt: result.data.committer.date });
     }, callback);
 }

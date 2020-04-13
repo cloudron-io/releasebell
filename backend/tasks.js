@@ -13,7 +13,8 @@ var assert = require('assert'),
     github = require('./github.js');
 
 module.exports = exports = {
-    run: run
+    run: run,
+    syncReleasesByProject: syncReleasesByProject // for initial sync on project add
 };
 
 const CAN_SEND_EMAIL = (process.env.CLOUDRON_MAIL_SMTP_SERVER && process.env.CLOUDRON_MAIL_SMTP_PORT && process.env.CLOUDRON_MAIL_FROM);
@@ -142,11 +143,8 @@ function syncReleasesByProject(user, project, callback) {
         return callback();
     }
 
-    api.getReleases(user.githubToken, project, function (error, result) {
+    api.getReleases(user.githubToken, project, function (error, upstreamReleases) {
         if (error) return callback(error);
-
-        // map to internal model
-        var upstreamReleases = result.map(function (r) { return { projectId: project.id, version: r.name, createdAt: r.createdAt, sha: r.commit.sha }; });
 
         database.releases.list(project.id, function (error, trackedReleases) {
             if (error) return callback(error);
@@ -157,12 +155,12 @@ function syncReleasesByProject(user, project, callback) {
 
             // only get the full commit for new releases
             async.eachLimit(newReleases, 10, function (release, callback) {
-                github.getCommit(user.githubToken, project, release.sha, function (error, commit) {
+                api.getCommit(user.githubToken, project, release.sha, function (error, commit) {
                     if (error) return callback(error);
 
                     // before initial successful sync and if notifications for this project are enabled, we mark the release as not notified yet
                     release.notified = !project.lastSuccessfulSyncAt ? true : !project.enabled;
-                    release.createdAt = new Date(commit.committer.date).getTime();
+                    release.createdAt = new Date(commit.createdAt).getTime();
 
                     delete release.sha;
 

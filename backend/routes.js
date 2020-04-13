@@ -176,6 +176,11 @@ function projectAdd(req, res, next) {
         if (error) return next(new HttpError(500, error));
 
         next(new HttpSuccess(201, { project: result }));
+
+        // force an initial release sync
+        tasks.syncReleasesByProject(req.user, result, function (error) {
+            if (error) console.error('Failed to perfom initial sync.', error);
+        });
     });
 }
 
