@@ -1,7 +1,6 @@
 'use strict';
 
 var assert = require('assert'),
-    async = require('async'),
     GitHub = require('github-api');
 
 module.exports = exports = {

@@ -9,6 +9,7 @@ var assert = require('assert'),
     handlebars = require('handlebars'),
     debug = require('debug')('releasebell/tasks'),
     smtpTransport = require('nodemailer-smtp-transport'),
+    gitlab = require('./gitlab.js'),
     github = require('./github.js');
 
 module.exports = exports = {
@@ -39,7 +40,7 @@ function run() {
 
     debug('run: start');
 
-    syncStarred(function (error) {
+    syncProjects(function (error) {
         if (error) console.error(error);
 
         syncReleases(function (error) {
@@ -49,7 +50,8 @@ function run() {
                 if (error) console.error(error);
 
                 // just keep polling for good every hour
-                setTimeout(run, 60 * 60 * 1000);
+                setTimeout(run, 5 * 1000);
+                // setTimeout(run, 60 * 60 * 1000);
                 tasksActive = false;
 
                 debug('run: done');
@@ -58,31 +60,30 @@ function run() {
     });
 }
 
-function syncStarred(callback) {
+function syncProjects(callback) {
     assert.strictEqual(typeof callback, 'function');
 
     database.users.list(function (error, result) {
         if (error) return callback(error);
 
-        // skip users without a github token
-        var users = result.filter(function (u) { return !!u.githubToken; });
-
-        async.each(users, function (user, callback) {
-            syncStarredByUser(user, function (error) {
+        async.each(result, function (user, callback) {
+            // errors are ignored here
+            syncGithubStarredByUser(user, function (error) {
                 if (error) console.error(error);
 
-                // errors are ignored here
                 callback();
             });
         }, callback);
     });
 }
 
-function syncStarredByUser(user, callback) {
+function syncGithubStarredByUser(user, callback) {
     assert.strictEqual(typeof user, 'object');
     assert.strictEqual(typeof callback, 'function');
 
     if (!user.githubToken) return callback();
+
+    debug('syncGithubStarredByUser: ', user.id)
 
     github.getStarred(user.githubToken, function (error, result) {
         if (error) return callback(error);
@@ -90,7 +91,7 @@ function syncStarredByUser(user, callback) {
         // translate from github to internal model
         var starredProjects = result.map(function (p) { return { name: p.full_name }; });
 
-        database.projects.list(user.id, function (error, trackedProjects) {
+        database.projects.listByType(user.id, database.PROJECT_TYPE_GITHUB, function (error, trackedProjects) {
             if (error) return callback(error);
 
             var newProjects = starredProjects.filter(function (a) { return !trackedProjects.find(function (b) { return a.name === b.name; }); });
@@ -98,7 +99,7 @@ function syncStarredByUser(user, callback) {
 
             // do not overwhelm github api with async.each() we hit rate limits if we do
             async.eachSeries(newProjects, function (project, callback) {
-                debug(`syncStarredByUser: [${project.name}] is new for user ${user.id}`);
+                debug(`syncGithubStarredByUser: [${project.name}] is new for user ${user.id}`);
 
                 // we add projects first with release notification disabled
                 database.projects.add({ type: database.PROJECT_TYPE_GITHUB, userId: user.id, name: project.name }, function (error, result) {
@@ -111,7 +112,7 @@ function syncStarredByUser(user, callback) {
                 if (error) return callback(error);
 
                 async.each(outdatedProjects, function (project, callback) {
-                    debug(`syncStarredByUser: [${project.name}] not starred anymore by ${user.id}`);
+                    debug(`syncGithubStarredByUser: [${project.name}] not starred anymore by ${user.id}`);
 
                     database.projects.remove(project.id, callback);
                 }, function (error) {
@@ -129,9 +130,19 @@ function syncReleasesByProject(user, project, callback) {
     assert.strictEqual(typeof project, 'object');
     assert.strictEqual(typeof callback, 'function');
 
-    debug(`syncReleasesByProject: [${project.name}] start sync releases. Last successful sync was at`, new Date(project.lastSuccessfulSyncAt));
+    debug(`syncReleasesByProject: [${project.name}] type ${project.type} start sync releases. Last successful sync was at`, new Date(project.lastSuccessfulSyncAt));
 
-    github.getReleases(user.githubToken, project, function (error, result) {
+    var api;
+    if (project.type === database.PROJECT_TYPE_GITHUB) {
+        api = github;
+    } else if (project.type === database.PROJECT_TYPE_GITLAB) {
+        api = gitlab;
+    } else {
+        debug(`syncReleasesByProject: [${project.name}] unknown type ${project.type}. Ignoring for now`);
+        return callback();
+    }
+
+    api.getReleases(user.githubToken, project, function (error, result) {
         if (error) return callback(error);
 
         // map to internal model
@@ -178,11 +189,6 @@ function syncReleasesByUser(user, callback) {
     database.projects.list(user.id, function (error, result) {
         if (error) return callback(error);
 
-        if (result.type !== database.PROJECT_TYPE_GITHUB) {
-            debug(`syncReleasesByUser: ignoring ${result.name} of type ${result.type} for now`);
-            return callback();
-        }
-
         async.eachSeries(result, function (project, callback) {
             syncReleasesByProject(user, project, callback);
         }, function (error) {
@@ -198,10 +204,7 @@ function syncReleases(callback) {
     database.users.list(function (error, result) {
         if (error) return callback(error);
 
-        // skip users without a github token
-        var users = result.filter(function (u) { return !!u.githubToken; });
-
-        async.eachSeries(users, function (user, callback) {
+        async.eachSeries(result, function (user, callback) {
             syncReleasesByUser(user, function (error) {
                 if (error) console.error(error);
 

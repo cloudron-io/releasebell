@@ -3,7 +3,7 @@
 /* global Vue */
 /* global superagent */
 
-var DEFAULT_VIEW = 'welcome';
+var DEFAULT_VIEW = 'projectAdd';
 
 new Vue({
     el: '#app',
