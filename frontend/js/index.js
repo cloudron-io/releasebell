@@ -20,7 +20,6 @@ new Vue({
         addProject: {
             busy: false,
             type: '',
-            name: '',
             url: ''
         }
     },
@@ -89,14 +88,20 @@ new Vue({
         onProjectAdd: function () {
             var that = this;
 
-            if (!this.addProject.name || !this.addProject.url) return;
+            var url = new URL(this.addProject.url);
 
-            console.log('Add Project', this.addProject.name, this.addProject.url, this.addProject.type);
+            var components = url.pathname.split('/');
+            if (components.length < 3) return console.error('Invalid gitlab url');
+
+            var origin = url.origin;
+            var name = components[1] + '/' + components[2];
+
+            console.log('Add Project', name, origin, this.addProject.type);
 
             var data = {
                 type: this.addProject.type,
-                name: this.addProject.name,
-                url: this.addProject.url
+                name: name,
+                origin: origin
             }
 
             this.addProject.busy = true;
@@ -128,6 +133,16 @@ new Vue({
                 this.login.username = '';
                 this.login.password = '';
             }
+        },
+        refreshProjects: function () {
+            var that = this;
+
+            superagent.get('/api/v1/projects').query({ username: that.login.username, password: that.login.password }).end(function (error, result) {
+                if (error) return that.onError(error);
+                if (result.statusCode !== 200) return that.onError('Unexpected response: ' + result.statusCode + ' ' + result.text);
+
+                that.projects = result.body.projects;
+            });
         },
         prettyDate: function (row, column, cellValue, index) {
             if (!cellValue) return '';
@@ -164,6 +179,21 @@ new Vue({
 
                 // update the ui now
                 that.projects.find(function (p) { return p.id === projectId; }).enabled = state;
+            });
+        },
+        deleteProject: function (projectId, scope) {
+            var that = this;
+
+            scope.row.busy = true;
+
+            superagent.delete('/api/v1/projects/' + projectId).query({ username: that.login.username, password: that.login.password }).end(function (error, result) {
+                scope.row.busy = false;
+
+                if (error) return that.onError(error);
+                if (result.statusCode !== 202) return that.onError('Unexpected response: ' + result.statusCode + ' ' + result.text);
+
+                // update the ui now
+                that.refreshProjects();
             });
         },
         sort: function (a, b) {

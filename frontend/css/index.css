@@ -33,3 +33,14 @@ a:hover, a:focus {
 .el-table a:hover {
     color: #66b1ff;
 }
+
+.type-icon {
+    height: 24px;
+    vertical-align: middle;
+    padding-right: 10px;
+    filter: grayscale(0.5);
+}
+
+.type-icon:hover {
+    filter: grayscale(0);
+}

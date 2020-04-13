@@ -53,14 +53,19 @@
               </template>
             </el-table-column>
             <el-table-column label="Type" sortable :sort-method="sort">
-              <template slot-scope="scope">{{ scope.row.type }}</template>
+              <template slot-scope="scope"><img :src="'/' + scope.row.type + '.svg'" class="type-icon"/> {{ scope.row.type }}</template>
             </el-table-column>
-            <!-- <el-table-column prop="type" label="Type" width="150px"></el-table-column> -->
             <el-table-column label="" align="right">
               <template slot-scope="scope">
                 <el-tag type="danger" v-show="!scope.row.enabled">Notifications are disabled</el-tag>
-                <el-button type="text" size="small" @click="setProjectState(scope.row.id, !scope.row.enabled, scope)" style="width: 80px;"><i class="el-icon-loading" v-show="scope.row.busy"></i><span v-show="!scope.row.busy">{{ scope.row.enabled ? 'Disable' : 'Enable' }}</span></el-button>
-              </template></el-table-column>
+              </template>
+            </el-table-column>
+            <el-table-column label="" align="right">
+              <template slot-scope="scope">
+                <el-button type="text" size="small" @click="setProjectState(scope.row.id, !scope.row.enabled, scope)"><i class="el-icon-loading" v-show="scope.row.busy"></i><span v-show="!scope.row.busy">{{ scope.row.enabled ? 'Disable' : 'Enable' }}</span></el-button>
+                <el-button type="text" size="small" v-show="scope.row.type !== 'github'" @click="deleteProject(scope.row.id, scope)"><i class="el-icon-loading" v-show="scope.row.busy"></i><span v-show="!scope.row.busy"> Delete</el-button>
+              </template>
+            </el-table-column>
           </el-table>
         </el-col>
       </el-row>
@@ -85,12 +90,11 @@
           <el-form ref="form" label-width="120px" @submit.native.prevent>
             <el-form-item label="Type" required>
               <el-select v-model="addProject.type" placeholder="Select">
-                <el-option key="github" label="Github" value="github"></el-option>
+                <el-option key="github" label="Github" value="github" ></el-option>
                 <el-option key="gitlab" label="GitLab" value="gitlab"></el-option>
                 <el-option key="website" label="Website" value="website"></el-option>
               </el-select>
             </el-form-item>
-            <el-form-item label="Name" required><el-input v-model="addProject.name" type="text"></el-input></el-form-item>
             <el-form-item label="Url" required><el-input v-model="addProject.url" type="text"></el-input></el-form-item>
             <el-form-item><el-button type="primary" native-type="submit" @click="onProjectAdd" style="width: 120px;" :disabled="addProject.busy"><i class="el-icon-loading" v-show="addProject.busy"></i><span v-show="!addProject.busy">Save</span></el-button></el-form-item>
             <input type="submit" @click="onProjectAdd" v-show="false"/>

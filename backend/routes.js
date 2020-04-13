@@ -24,7 +24,8 @@ module.exports = exports = {
         get: projectsGet,
         add: projectAdd,
         list: projectsList,
-        update: projectsUpdate
+        update: projectsUpdate,
+        del: projectsDelete
     }
 };
 
@@ -167,7 +168,8 @@ function projectAdd(req, res, next) {
     const project = {
         type: req.body.type,
         userId: req.user.id,
-        name: req.body.name
+        name: req.body.name,
+        origin: req.body.origin
     };
 
     database.projects.add(project, function (error, result) {
@@ -193,6 +195,17 @@ function projectsUpdate(req, res, next) {
     assert.strictEqual(typeof req.params.projectId, 'string');
 
     database.projects.update(req.params.projectId, req.body, function (error) {
+        if (error) return next(new HttpError(500, error));
+
+        next(new HttpSuccess(202, {}));
+    });
+}
+
+function projectsDelete(req, res, next) {
+    assert.strictEqual(typeof req.user, 'object');
+    assert.strictEqual(typeof req.params.projectId, 'string');
+
+    database.projects.remove(req.params.projectId, function (error) {
         if (error) return next(new HttpError(500, error));
 
         next(new HttpSuccess(202, {}));

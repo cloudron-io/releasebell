@@ -27,6 +27,7 @@ function start(port, callback) {
     router.post('/api/v1/projects', routes.auth, routes.projects.add);
     router.get ('/api/v1/projects/:projectId', routes.auth, routes.projects.get);
     router.post('/api/v1/projects/:projectId', routes.auth, routes.projects.update);
+    router.del ('/api/v1/projects/:projectId', routes.auth, routes.projects.del);
 
     app
         .use(connectTimeout(10000, { respond: true }))

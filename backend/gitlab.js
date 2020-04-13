@@ -31,7 +31,9 @@ function getReleases(token, project, callback) {
 
     // https://gitlab.example.com/api/v4/projects/24/releases
 
-    callback(new Error('not implemented'));
+    console.log('---', token, project)
+
+    callback(null, []);
 }
 
 function getCommit(token, project, sha, callback) {
