@@ -21,3 +21,6 @@
 [1.2.1]
 * Fix login issue when password contains special characters
 
+[1.3.0]
+* Add GitLab project notification support
+

@@ -1,6 +1,8 @@
 ### Overview
 
-This app packages Release Bell <upstream>1.2.1</upstream>
+This app packages Release Bell <upstream>1.3.0</upstream>
 
 Release Bell tracks your starred GitHub repositories and will notify you on every new tag or release.
+Furthermore it allows to manually track GitLab project releases.
+
 All notifications are sent out via email.
