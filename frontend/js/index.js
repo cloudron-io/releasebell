@@ -175,17 +175,23 @@ new Vue({
         deleteProject: function (projectId, scope) {
             var that = this;
 
-            scope.row.busy = true;
+            this.$confirm('Really remove this Project?', 'Warning', {
+                confirmButtonText: 'OK',
+                cancelButtonText: 'Cancel',
+                type: 'warning'
+            }).then(function () {
+                scope.row.busy = true;
 
-            superagent.delete('/api/v1/projects/' + projectId).query({ username: that.login.username, password: that.login.password }).end(function (error, result) {
-                scope.row.busy = false;
+                superagent.delete('/api/v1/projects/' + projectId).query({ username: that.login.username, password: that.login.password }).end(function (error, result) {
+                    scope.row.busy = false;
 
-                if (error) return that.onError(error);
-                if (result.statusCode !== 202) return that.onError('Unexpected response: ' + result.statusCode + ' ' + result.text);
+                    if (error) return that.onError(error);
+                    if (result.statusCode !== 202) return that.onError('Unexpected response: ' + result.statusCode + ' ' + result.text);
 
-                // update the ui now
-                that.refreshProjects();
-            });
+                    // update the ui now
+                    that.refreshProjects();
+                });
+              }).catch(function () {});
         },
         sort: function (a, b) {
             // default sorting uses case-sensitive sorting
