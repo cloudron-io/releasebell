@@ -3,7 +3,7 @@
 /* global Vue */
 /* global superagent */
 
-var DEFAULT_VIEW = 'projectAdd';
+var DEFAULT_VIEW = 'welcome';
 
 new Vue({
     el: '#app',
@@ -19,7 +19,7 @@ new Vue({
         profileSubmitBusy: false,
         addProject: {
             busy: false,
-            type: '',
+            type: 'gitlab',
             url: ''
         }
     },

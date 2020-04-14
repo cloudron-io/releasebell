@@ -49,7 +49,8 @@
           <el-table :data="projects" v-show="projects && projects.length" stripe style="width: 100%" :default-sort="{ prop: 'name', order: 'descending' }">
             <el-table-column prop="name" label="Project Name" sortable :sort-method="sort">
               <template slot-scope="scope">
-                <a :href="'https://github.com/' + scope.row.name" target="_blank">{{ scope.row.name }}</a>
+                <a :href="'https://github.com/' + scope.row.name" target="_blank" v-show="scope.row.type === 'github'">{{ scope.row.name }}</a>
+                <a :href="scope.row.origin + '/' + scope.row.name" target="_blank" v-show="scope.row.type === 'gitlab'">{{ scope.row.name }}</a>
               </template>
             </el-table-column>
             <el-table-column label="Type" sortable :sort-method="sort">
@@ -90,9 +91,8 @@
           <el-form ref="form" label-width="120px" @submit.native.prevent>
             <el-form-item label="Type" required>
               <el-select v-model="addProject.type" placeholder="Select">
-                <el-option key="github" label="Github" value="github" ></el-option>
+                <el-option key="github" label="Github" value="github" disabled></el-option>
                 <el-option key="gitlab" label="GitLab" value="gitlab"></el-option>
-                <el-option key="website" label="Website" value="website"></el-option>
               </el-select>
             </el-form-item>
             <el-form-item label="Url" required><el-input v-model="addProject.url" type="text"></el-input></el-form-item>
@@ -108,17 +108,22 @@
           <center v-show="projects === null"><h1><i class="el-icon-loading"></i></h1></center>
           <center v-show="projects && projects.length === 0">
               <h1><i class="el-icon-bell"></i> Welcome to Release Bell</h1>
-              <p>Set a GitHub token in your <a href="" @click.prevent="handleViewSelect('profile')">profile</a> to start receiving new release notifcations for your starred repos.</p>
+              <p>
+                Set a GitHub token in your <a href="" @click.prevent="handleViewSelect('profile')">profile</a> to start receiving new release notifcations for your starred repos <br/>
+                or add <a href="" @click.prevent="handleViewSelect('projectAdd')">GitLab project URLs</a> for release notifications for those projects.
+              </p>
           </center>
           <el-table :data="projects" v-show="projects && projects.length" stripe style="width: 100%" :default-sort="{ prop: 'createdAt', order: 'descending' }">
             <el-table-column prop="name" label="Project Name" sortable :sort-method="sort">
               <template slot-scope="scope">
-                <a :href="'https://github.com/' + scope.row.name" target="_blank">{{ scope.row.name }}</a>
+                <a :href="'https://github.com/' + scope.row.name" target="_blank" v-show="scope.row.type === 'github'">{{ scope.row.name }}</a>
+                <a :href="scope.row.origin + '/' + scope.row.name" target="_blank" v-show="scope.row.type === 'gitlab'">{{ scope.row.name }}</a>
               </template>
             </el-table-column>
             <el-table-column prop="version" align="center" label="Last Version" sortable>
               <template slot-scope="scope">
-                <a :href="'https://github.com/' + scope.row.name + '/releases/tag/' + scope.row.version" target="_blank">{{ scope.row.version }}</a>
+                <a :href="'https://github.com/' + scope.row.name + '/releases/tag/' + scope.row.version" target="_blank" v-show="scope.row.type === 'github'">{{ scope.row.version }}</a>
+                <a :href="scope.row.origin + '/' + scope.row.name + '/-/releases/' + scope.row.version" target="_blank" v-show="scope.row.type === 'gitlab'">{{ scope.row.version }}</a>
               </template>
             </el-table-column>
             <el-table-column prop="createdAt" align="right" label="Released at" sortable :formatter="prettyDate"></el-table-column>
