@@ -10,8 +10,8 @@ CREATE TABLE IF NOT EXISTS users(
 CREATE TABLE IF NOT EXISTS projects(
     id VARCHAR(128) NOT NULL UNIQUE,
     userId VARCHAR(128) NOT NULL,
-    name VARCHAR(512) NOT NULL,
-    origin VARCHAR(512) NOT NULL DEFAULT "",
+    name VARCHAR(512) NOT NULL,                 -- project identifier ie. "username/projectname"
+    origin VARCHAR(512) NOT NULL DEFAULT "",    -- origin for GitLab host
     enabled BOOLEAN DEFAULT true,
     lastSuccessfulSyncAt BIGINT DEFAULT 0,
     type VARCHAR(32) NOT NULL DEFAULT "github",

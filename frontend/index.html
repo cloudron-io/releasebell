@@ -30,7 +30,7 @@
     </el-menu>
   </el-header>
   <el-main>
-    <div v-if="activeView === 'login'">
+    <div v-show="activeView === 'login'">
       <el-row type="flex" justify="center">
         <el-col style="max-width: 400px">
           <el-form ref="form" :model="login" label-position="top" @submit.native.prevent>
@@ -41,7 +41,7 @@
         </el-col>
       </el-row>
     </div>
-    <div v-else-if="activeView === 'projects'">
+    <div v-show="activeView === 'projects'">
       <el-row type="flex" justify="center">
         <el-col style="max-width: 1024px">
           <center v-show="projects === null"><h1><i class="el-icon-loading"></i></h1></center>
@@ -71,7 +71,7 @@
         </el-col>
       </el-row>
     </div>
-    <div v-else-if="activeView === 'profile'">
+    <div v-show="activeView === 'profile'">
       <el-row type="flex" justify="center">
         <el-col style="max-width: 600px">
           <el-form ref="form" label-width="120px" @submit.native.prevent>
@@ -85,7 +85,7 @@
         </el-col>
       </el-row>
     </div>
-    <div v-else-if="activeView === 'projectAdd'">
+    <div v-show="activeView === 'projectAdd'">
       <el-row type="flex" justify="center">
         <el-col style="max-width: 600px">
           <el-form ref="form" label-width="120px" @submit.native.prevent>
@@ -102,7 +102,7 @@
         </el-col>
       </el-row>
     </div>
-    <div v-else-if="activeView === 'welcome'">
+    <div v-show="activeView === 'welcome'">
       <el-row type="flex" justify="center">
         <el-col style="max-width: 1024px">
           <center v-show="projects === null"><h1><i class="el-icon-loading"></i></h1></center>

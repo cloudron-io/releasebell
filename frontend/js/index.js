@@ -115,20 +115,11 @@ new Vue({
             });
         },
         handleViewSelect: function (key) {
-            var that = this;
-
             if (!this.profile) this.activeView = 'login';
             else this.activeView = key;
 
             if (this.activeView === 'projects' || this.activeView === 'welcome') {
-                this.projects = null;
-
-                superagent.get('/api/v1/projects').query({ username: that.login.username, password: that.login.password }).end(function (error, result) {
-                    if (error) return that.onError(error);
-                    if (result.statusCode !== 200) return that.onError('Unexpected response: ' + result.statusCode + ' ' + result.text);
-
-                    that.projects = result.body.projects;
-                });
+                this.refreshProjects();
             } else if (this.activeView === 'login') {
                 this.login.username = '';
                 this.login.password = '';
