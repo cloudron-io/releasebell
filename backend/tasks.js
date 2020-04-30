@@ -51,8 +51,7 @@ function run() {
                 if (error) console.error(error);
 
                 // just keep polling for good every hour
-                setTimeout(run, 5 * 1000);
-                // setTimeout(run, 60 * 60 * 1000);
+                setTimeout(run, 60 * 60 * 1000);
                 tasksActive = false;
 
                 debug('run: done');
