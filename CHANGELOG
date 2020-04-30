@@ -28,3 +28,6 @@
 * Fix login regression
 * Use latest base image 2.0.0
 
+[1.3.2]
+* Fix new release polling
+
