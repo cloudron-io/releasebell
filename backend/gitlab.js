@@ -30,10 +30,12 @@ function getReleases(token, project, callback) {
     assert.strictEqual(typeof project, 'object');
     assert.strictEqual(typeof callback, 'function');
 
-    superagent.get(project.origin + '/api/v4/projects/' + encodeURIComponent(project.name) + '/releases').end(function (error, result) {
-        if (error) console.error(error);
+    // we get tags instead of releases because some projects like GitLab itself only do releases for the main release (and not for patch)
+    // https://docs.gitlab.com/ee/api/tags.html
+    superagent.get(project.origin + '/api/v4/projects/' + encodeURIComponent(project.name) + '/repository/tags?order_by=updated&sort=desc').end(function (error, result) {
+        if (error) return callback(error);
 
-        callback(null, result.body.map(function (r) { return { projectId: project.id, version: r.name, createdAt: r.created_at, sha: r.commit.id }; }));
+        callback(null, result.body.map(function (r) { return { projectId: project.id, version: r.name, createdAt: r.commit.created_at, sha: r.commit.id }; }));
     });
 }
 
