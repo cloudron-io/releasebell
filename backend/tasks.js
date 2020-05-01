@@ -236,7 +236,12 @@ function sendNotificationEmail(release, callback) {
                 }
             }));
 
-            const versionLink = `https://github.com/${project.name}/releases/tag/${release.version}`;
+            let versionLink;
+            if (project.type === database.PROJECT_TYPE_GITHUB) {
+                versionLink = `https://github.com/${project.name}/releases/tag/${release.version}`;
+            } else if (project.type === database.PROJECT_TYPE_GITLAB) {
+                versionLink = `${project.origin}/${project.name}/-/tags/${release.version}`;
+            }
             const settingsLink = process.env.CLOUDRON_APP_ORIGIN || '';
 
             var mail = {
