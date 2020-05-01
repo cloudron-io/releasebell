@@ -164,6 +164,8 @@ function syncReleasesByProject(user, project, callback) {
                     // before initial successful sync and if notifications for this project are enabled, we mark the release as not notified yet
                     release.notified = !project.lastSuccessfulSyncAt ? true : !project.enabled;
                     release.createdAt = new Date(commit.createdAt).getTime();
+                    // old code did not get all tags properly. this hack limits notifications to last 10 days
+                    if (Date.now() - release.createdAt > 10 * 24 * 60 * 60 * 1000) release.notified = true;
 
                     delete release.sha;
 
