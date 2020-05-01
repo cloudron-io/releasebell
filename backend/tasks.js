@@ -262,7 +262,7 @@ function sendNotifications(callback) {
     database.releases.listAllPending(function (error, result) {
         if (error) return callback(error);
 
-        async.each(result, function (release, callback) {
+        async.eachSeries(result, function (release, callback) {
             sendNotificationEmail(release, function (error) {
                 if (error) console.error(error);
 
