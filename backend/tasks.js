@@ -88,6 +88,8 @@ function syncGithubStarredByUser(user, callback) {
     github.getStarred(user.githubToken, function (error, result) {
         if (error) return callback(error);
 
+        debug(`syncGithubStarredByUser: found ${result.length} starred repos`);
+
         // translate from github to internal model
         var starredProjects = result.map(function (p) { return { name: p.full_name }; });
 
@@ -96,6 +98,8 @@ function syncGithubStarredByUser(user, callback) {
 
             var newProjects = starredProjects.filter(function (a) { return !trackedProjects.find(function (b) { return a.name === b.name; }); });
             var outdatedProjects = trackedProjects.filter(function (a) { return !starredProjects.find(function (b) { return a.name === b.name; }); });
+
+            debug(`syncGithubStarredByUser: new projects: ${newProjects.length} outdated projects: ${outdatedProjects.length}`);
 
             // do not overwhelm github api with async.each() we hit rate limits if we do
             async.eachSeries(newProjects, function (project, callback) {
