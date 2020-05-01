@@ -1,4 +1,4 @@
-This app packages Release Bell <upstream>1.3.0</upstream>
+This app packages Release Bell <upstream>1.4.0</upstream>
 
 ### Overview
 

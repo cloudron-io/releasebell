@@ -31,3 +31,7 @@
 [1.3.2]
 * Fix new release polling
 
+[1.4.0]
+* Fix pagination issues listing tags and starred repos
+* gitlab: use tags instead of releases
+
