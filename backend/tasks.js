@@ -189,10 +189,10 @@ function syncReleasesByUser(user, callback) {
     assert.strictEqual(typeof user, 'object');
     assert.strictEqual(typeof callback, 'function');
 
-    database.projects.list(user.id, function (error, result) {
+    database.projects.list(user.id, function (error, projects) {
         if (error) return callback(error);
 
-        async.eachSeries(result, function (project, callback) {
+        async.eachSeries(projects, function (project, callback) {
             syncReleasesByProject(user, project, callback);
         }, function (error) {
             if (error) console.error(error);

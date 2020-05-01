@@ -71,7 +71,8 @@ function projectsList(userId, callback) {
     assert.strictEqual(typeof userId, 'string');
     assert.strictEqual(typeof callback, 'function');
 
-    db.query('SELECT projects.*,releases.version,releases.createdAt FROM projects LEFT JOIN releases on releases.id = (SELECT releases.id FROM releases WHERE projectId=projects.id ORDER BY createdAt DESC LIMIT 1) WHERE userId=?', [ userId ], function (error, result) {
+    // we order by lastSuccessfulSyncAt so that if we hit API rate limits, each project gets a chance eventually
+    db.query('SELECT projects.*,releases.version,releases.createdAt FROM projects LEFT JOIN releases on releases.id = (SELECT releases.id FROM releases WHERE projectId=projects.id ORDER BY createdAt DESC LIMIT 1) WHERE userId=? ORDER BY lastSuccessfulSyncAt ASC', [ userId ], function (error, result) {
         if (error) return callback(error);
 
         result.forEach(projectPostprocess);
