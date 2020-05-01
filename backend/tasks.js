@@ -83,7 +83,7 @@ function syncGithubStarredByUser(user, callback) {
 
     if (!user.githubToken) return callback();
 
-    debug('syncGithubStarredByUser: ', user.id)
+    debug('syncGithubStarredByUser: ', user.id);
 
     github.getStarred(user.githubToken, function (error, result) {
         if (error) return callback(error);

@@ -1,7 +1,7 @@
 'use strict';
 
 var assert = require('assert'),
-    GitHub = require('github-api');
+    { Octokit } = require('@octokit/rest');
 
 module.exports = exports = {
     verifyToken: verifyToken,
@@ -13,8 +13,8 @@ module.exports = exports = {
 // translate some api errors
 function handleError(callback) {
     return function (error) {
-        if (error.response) {
-            if (error.response.status === 403 && error.response.data.message.indexOf('API rate limit exceeded') === 0) {
+        if (error) {
+            if (error.status === 403 && error.message.indexOf('API rate limit exceeded') === 0) {
                 error.message = 'GitHub rate limit exceeded. Please wait a bit.';
             }
         }
@@ -27,10 +27,9 @@ function verifyToken(token, callback) {
     assert.strictEqual(typeof token, 'string');
     assert.strictEqual(typeof callback, 'function');
 
-    var api = new GitHub({ token: token });
-    var user = api.getUser();
+    const octokit = new Octokit({ auth: token, userAgent: 'releasebell@cloudron' });
 
-    user.listStarredRepos().then(function () {
+    octokit.users.getAuthenticated().then(function () {
         callback();
     }, handleError(callback));
 }
@@ -39,11 +38,10 @@ function getStarred(token, callback) {
     assert.strictEqual(typeof token, 'string');
     assert.strictEqual(typeof callback, 'function');
 
-    var api = new GitHub({ token: token });
-    var user = api.getUser();
+    const octokit = new Octokit({ auth: token, userAgent: 'releasebell@cloudron' });
 
-    user.listStarredRepos().then(function (result) {
-        callback(null, result.data);
+    octokit.paginate(octokit.activity.listReposStarredByAuthenticatedUser).then(function (result) {
+        callback(null, result);
     }, handleError(callback));
 }
 
@@ -53,25 +51,25 @@ function getReleases(token, project, callback) {
     assert.strictEqual(typeof project, 'object');
     assert.strictEqual(typeof callback, 'function');
 
-    var api = new GitHub({ token: token });
-    var repo = api.getRepo(project.name);
+    const octokit = new Octokit({ auth: token, userAgent: 'releasebell@cloudron' });
 
-    repo.listTags().then(function (result) {
-        callback(null, result.data.map(function (r) { return { projectId: project.id, version: r.name, createdAt: r.createdAt, sha: r.commit.sha }; }));
+    const [ owner, repo ] = project.name.split('/');
+    octokit.paginate(octokit.repos.listTags, { owner, repo }).then(function (result) { // tags have no created_at field
+        callback(null, result.map(function (r) { return { projectId: project.id, version: r.name, createdAt: null, sha: r.commit.sha }; }));
     }, handleError(callback));
 }
 
 // Returns { createdAt }
-function getCommit(token, project, sha, callback) {
+function getCommit(token, project, commit_sha, callback) {
     assert.strictEqual(typeof token, 'string');
     assert.strictEqual(typeof project, 'object');
-    assert.strictEqual(typeof sha, 'string');
+    assert.strictEqual(typeof commit_sha, 'string');
     assert.strictEqual(typeof callback, 'function');
 
-    var api = new GitHub({ token: token });
-    var repo = api.getRepo(project.name);
+    const octokit = new Octokit({ auth: token, userAgent: 'releasebell@cloudron' });
 
-    repo.getCommit(sha).then(function (result) {
+    const [ owner, repo ] = project.name.split('/');
+    octokit.git.getCommit({ owner, repo, commit_sha }).then(function (result) {
         callback(null, { createdAt: result.data.committer.date });
     }, callback);
 }
