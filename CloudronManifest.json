@@ -28,5 +28,6 @@
     "https://s3.amazonaws.com/cloudron-app-screenshots/io.cloudron.releasebell/c4ffba79e3b0d71859e07a1da4236436151bdaff/releasebell_4.png"
   ],
   "changelog": "file://CHANGELOG",
-  "minBoxVersion": "4.1.4"
+  "minBoxVersion": "4.1.4",
+  "documentationUrl": "https://cloudron.io/documentation/apps/releasebell/"
 }
