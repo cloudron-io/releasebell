@@ -9,7 +9,7 @@
     "releases",
     "github"
   ],
-  "version": "1.5.0",
+  "version": "1.5.1",
   "healthCheckPath": "/api/v1/status",
   "httpPort": 3000,
   "manifestVersion": 2,

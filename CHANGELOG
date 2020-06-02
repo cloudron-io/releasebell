@@ -37,3 +37,7 @@
 [1.5.0]
 * Use latest base image 2.0.0
 
+[1.5.1]
+* Add support to add GitHub projects manually
+* Continue checking project releases even if one fails
+
