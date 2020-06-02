@@ -8,6 +8,7 @@ module.exports = exports = {
     init: init,
 
     PROJECT_TYPE_GITHUB: 'github',
+    PROJECT_TYPE_GITHUB_MANUAL: 'github_manual',
     PROJECT_TYPE_GITLAB: 'gitlab',
     PROJECT_TYPE_WEBSITE: 'website',
 

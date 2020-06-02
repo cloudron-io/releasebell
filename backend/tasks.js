@@ -139,6 +139,8 @@ function syncReleasesByProject(user, project, callback) {
     var api;
     if (project.type === database.PROJECT_TYPE_GITHUB) {
         api = github;
+    } else if (project.type === database.PROJECT_TYPE_GITHUB_MANUAL) {
+        api = gitlab;
     } else if (project.type === database.PROJECT_TYPE_GITLAB) {
         api = gitlab;
     } else {

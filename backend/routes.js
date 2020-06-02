@@ -163,7 +163,7 @@ function projectAdd(req, res, next) {
     assert.strictEqual(typeof req.user, 'object');
 
     if (!req.body.type) return next(new HttpError(400, 'type is required'));
-    if ([ database.PROJECT_TYPE_GITHUB, database.PROJECT_TYPE_GITLAB, database.PROJECT_TYPE_WEBSITE ].indexOf(req.body.type) === -1) return next(new HttpError(400, 'invalid type'));
+    if ([ database.PROJECT_TYPE_GITHUB_MANUAL, database.PROJECT_TYPE_GITLAB, database.PROJECT_TYPE_WEBSITE ].indexOf(req.body.type) === -1) return next(new HttpError(400, 'invalid type'));
 
     const project = {
         type: req.body.type,
