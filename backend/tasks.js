@@ -149,7 +149,10 @@ function syncReleasesByProject(user, project, callback) {
     }
 
     api.getReleases(user.githubToken, project, function (error, upstreamReleases) {
-        if (error) return callback(error);
+        if (error) {
+            console.error(error)
+            return callback();
+        }
 
         database.releases.list(project.id, function (error, trackedReleases) {
             if (error) return callback(error);
@@ -161,7 +164,10 @@ function syncReleasesByProject(user, project, callback) {
             // only get the full commit for new releases
             async.eachLimit(newReleases, 10, function (release, callback) {
                 api.getCommit(user.githubToken, project, release.sha, function (error, commit) {
-                    if (error) return callback(error);
+                    if (error) {
+                        console.error(error)
+                        return callback();
+                    }
 
                     // before initial successful sync and if notifications for this project are enabled, we mark the release as not notified yet
                     release.notified = !project.lastSuccessfulSyncAt ? true : !project.enabled;
