@@ -41,3 +41,6 @@
 * Add support to add GitHub projects manually
 * Continue checking project releases even if one fails
 
+[1.5.2]
+* Update manifest with forum url
+
