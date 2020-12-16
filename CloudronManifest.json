@@ -22,12 +22,13 @@
     "sendmail": {}
   },
   "mediaLinks": [
-    "https://s3.amazonaws.com/cloudron-app-screenshots/io.cloudron.releasebell/c4ffba79e3b0d71859e07a1da4236436151bdaff/releasebell_1.png",
-    "https://s3.amazonaws.com/cloudron-app-screenshots/io.cloudron.releasebell/c4ffba79e3b0d71859e07a1da4236436151bdaff/releasebell_2.png",
-    "https://s3.amazonaws.com/cloudron-app-screenshots/io.cloudron.releasebell/c4ffba79e3b0d71859e07a1da4236436151bdaff/releasebell_3.png",
-    "https://s3.amazonaws.com/cloudron-app-screenshots/io.cloudron.releasebell/c4ffba79e3b0d71859e07a1da4236436151bdaff/releasebell_4.png"
+    "https://screenshots.cloudron.io/io.cloudron.releasebell/releasebell_1.png",
+    "https://screenshots.cloudron.io/io.cloudron.releasebell/releasebell_2.png",
+    "https://screenshots.cloudron.io/io.cloudron.releasebell/releasebell_3.png",
+    "https://screenshots.cloudron.io/io.cloudron.releasebell/releasebell_4.png"
   ],
+  "forumUrl": "https://forum.cloudron.io/category/55/release-bell",
   "changelog": "file://CHANGELOG",
-  "minBoxVersion": "4.1.4",
-  "documentationUrl": "https://cloudron.io/documentation/apps/releasebell/"
+  "minBoxVersion": "5.4.0",
+  "documentationUrl": "https://docs.cloudron.io/apps/releasebell/"
 }
