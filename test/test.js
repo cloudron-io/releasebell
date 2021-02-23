@@ -23,10 +23,12 @@ describe('Application life cycle test', function () {
     var browser;
     const username = process.env.USERNAME;
     const password = process.env.PASSWORD;
+    const ghToken = process.env.GITHUB_TOKEN;
 
     before(function (done) {
         if (!process.env.USERNAME) return done(new Error('USERNAME env var not set'));
         if (!process.env.PASSWORD) return done(new Error('PASSWORD env var not set'));
+        if (!process.env.GITHUB_TOKEN) return done(new Error('GITHUB_TOKEN env var not set'));
 
         browser = new Builder().forBrowser('chrome').setChromeOptions(new Options().windowSize({ width: 1280, height: 1024 })).build();
 
@@ -81,6 +83,35 @@ describe('Application life cycle test', function () {
         });
     }
 
+    function setGithubToken(callback) {
+        browser.get('https://' + app.fqdn).then(function () {
+            return browser.sleep(3000);
+        }).then(function () {
+            return visible(By.xpath('//li[contains(text(), "Profile")]'));
+        }).then(function () {
+            return browser.findElement(By.xpath('//li[contains(text(), "Profile")]')).click();
+        }).then(function () {
+            return browser.findElement(By.id('githubToken')).sendKeys(ghToken);
+        }).then(function () {
+            return browser.findElement(By.id('saveProfile')).click();
+        }).then(function () {
+            console.log('waiting for 5 minutes for syncing');
+            return browser.sleep(5 * 60 * 1000);
+        }).then(function () {
+            callback();
+        });
+    }
+
+    function checkProjects(callback) {
+        browser.get('https://' + app.fqdn).then(function () {
+            return browser.sleep(3000);
+        }).then(function () {
+            return browser.findElement(By.xpath('//a[@href="https://github.com/cloudron-io/surfer"]'));
+        }).then(function () {
+            callback();
+        });
+    }
+
     function getAppInfo() {
         var inspect = JSON.parse(execSync('cloudron inspect'));
         app = inspect.apps.filter(function (a) { return a.location === LOCATION || a.location === LOCATION + '2'; })[0];
@@ -98,12 +129,15 @@ describe('Application life cycle test', function () {
     it('can get app information', getAppInfo);
 
     it('can login', login);
+    it('can set gh token', setGithubToken);
+    it('can see projects', checkProjects);
     it('can logout', logout);
 
     it('restart app', function () {
         execSync('cloudron restart --app ' + app.id, { cwd: path.resolve(__dirname, '..'), stdio: 'inherit' });
     });
     it('can login', login);
+    it('can see projects', checkProjects);
     it('can logout', logout);
 
     it('backup app', function () {
@@ -119,6 +153,7 @@ describe('Application life cycle test', function () {
     });
 
     it('can login', login);
+    it('can see projects', checkProjects);
     it('can logout', logout);
 
     it('move to different location', function () {
@@ -130,6 +165,7 @@ describe('Application life cycle test', function () {
     });
 
     it('can login', login);
+    it('can see projects', checkProjects);
     it('can logout', logout);
 
     it('uninstall app', function () {
@@ -143,6 +179,7 @@ describe('Application life cycle test', function () {
 
     it('can get app information', getAppInfo);
     it('can login', login);
+    it('can set gh token', setGithubToken);
     it('can logout', logout);
 
     it('can update', function () {
@@ -153,6 +190,7 @@ describe('Application life cycle test', function () {
     });
 
     it('can login', login);
+    it('can see projects', checkProjects);
     it('can logout', logout);
 
     it('uninstall app', function () {

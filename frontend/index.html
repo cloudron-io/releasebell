@@ -77,10 +77,10 @@
           <el-form ref="form" label-width="120px" @submit.native.prevent>
             <el-form-item label="Email" required><el-input v-model="profile.email" type="email"></el-input></el-form-item>
             <el-form-item label="GitHub token">
-              <el-input v-model="profile.githubToken" ref="githubTokenInput"></el-input>
+              <el-input id="githubToken" v-model="profile.githubToken" ref="githubTokenInput"></el-input>
               <a href="https://github.com/settings/tokens/new?description=ReleaseBell" target="_blank">Generate a GitHub API token</a>
             </el-form-item>
-            <el-form-item><el-button type="primary" native-type="submit" @click="onProfileSubmit" style="width: 120px;" :disabled="profileSubmitBusy"><i class="el-icon-loading" v-show="profileSubmitBusy"></i><span v-show="!profileSubmitBusy">Save</span></el-button></el-form-item>
+            <el-form-item><el-button id="saveProfile" type="primary" native-type="submit" @click="onProfileSubmit" style="width: 120px;" :disabled="profileSubmitBusy"><i class="el-icon-loading" v-show="profileSubmitBusy"></i><span v-show="!profileSubmitBusy">Save</span></el-button></el-form-item>
           </el-form>
         </el-col>
       </el-row>
