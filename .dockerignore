@@ -1,2 +1,7 @@
-node_modules/
-screenshots/
+.git
+.gitignore
+.dockerignore
+node_modules
+screenshots
+test
+

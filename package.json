@@ -25,5 +25,13 @@
     "superagent": "^6.1.0",
     "supererror": "^0.7.2",
     "uuid": "^8.3.2"
+  },
+  "devDependencies": {
+    "chromedriver": "^88.0.0",
+    "ejs": "^3.1.6",
+    "expect.js": "^0.3.1",
+    "mocha": "^8.3.0",
+    "selenium-server-standalone-jar": "^3.141.59",
+    "selenium-webdriver": "^4.0.0-beta.1"
   }
 }
