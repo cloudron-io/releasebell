@@ -44,3 +44,6 @@
 [1.5.2]
 * Update manifest with forum url
 
+[1.6.0]
+* Update base image v3
+
