@@ -1,7 +1,7 @@
 'use strict';
 
 var assert = require('assert'),
-    uuid = require('uuid/v4'),
+    uuid = require('uuid'),
     mysql = require('mysql');
 
 module.exports = exports = {
@@ -100,7 +100,7 @@ function projectsAdd(project, callback) {
     assert.strictEqual(typeof project, 'object');
     assert.strictEqual(typeof callback, 'function');
 
-    project.id = uuid();
+    project.id = uuid.v4();
     project.enabled = true;
     project.lastSuccessfulSyncAt = 0;
 
@@ -217,7 +217,7 @@ function releasesAdd(release, callback) {
     assert.strictEqual(typeof release, 'object');
     assert.strictEqual(typeof callback, 'function');
 
-    release.id = uuid();
+    release.id = uuid.v4();
 
     db.query('INSERT INTO releases SET ?', release, function (error) {
         if (error) return callback(error);
