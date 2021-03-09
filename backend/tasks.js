@@ -28,7 +28,7 @@ No email configuration found. Set the following environment variables:
     CLOUDRON_MAIL_SMTP_USERNAME
     CLOUDRON_MAIL_SMTP_PASSWORD
     CLOUDRON_MAIL_FROM
-    CLOUDRON_MAIL_TLS  (optional)
+    MAIL_TLS  (optional)
     `);
 }
 
@@ -245,7 +245,7 @@ function sendNotificationEmail(release, callback) {
             var transport = nodemailer.createTransport(smtpTransport({
                 host: process.env.CLOUDRON_MAIL_SMTP_SERVER,
                 port: process.env.CLOUDRON_MAIL_SMTP_PORT,
-                secure: !!process.env.CLOUDRON_MAIL_TLS,
+                secure: !!process.env.MAIL_TLS,
                 auth: {
                     user: process.env.CLOUDRON_MAIL_SMTP_USERNAME,
                     pass: process.env.CLOUDRON_MAIL_SMTP_PASSWORD
