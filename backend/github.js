@@ -7,7 +7,8 @@ module.exports = exports = {
     verifyToken: verifyToken,
     getStarred: getStarred,
     getReleases: getReleases,
-    getCommit: getCommit
+    getCommit: getCommit,
+    getReleaseBody: getReleaseBody
 };
 
 // translate some api errors
@@ -59,7 +60,7 @@ function getReleases(token, project, callback) {
     }, handleError(callback));
 }
 
-// Returns { createdAt }
+// Returns { createdAt, message }
 function getCommit(token, project, commit_sha, callback) {
     assert.strictEqual(typeof token, 'string');
     assert.strictEqual(typeof project, 'object');
@@ -70,6 +71,37 @@ function getCommit(token, project, commit_sha, callback) {
 
     const [ owner, repo ] = project.name.split('/');
     octokit.git.getCommit({ owner, repo, commit_sha }).then(function (result) {
-        callback(null, { createdAt: result.data.committer.date });
+        callback(null, { createdAt: result.data.committer.date, message: result.data.message });
     }, callback);
+}
+
+// Returns release body string
+function getReleaseBody(token, project, version, fallbackBody, callback) {
+    assert.strictEqual(typeof token, 'string');
+    assert.strictEqual(typeof project, 'object');
+    assert.strictEqual(typeof version, 'string');
+    assert.strictEqual(typeof callback, 'function');
+
+    const octokit = new Octokit({ auth: token, userAgent: 'releasebell@cloudron' });
+
+    const [ owner, repo ] = project.name.split('/');
+    octokit.repos.getReleaseByTag({ owner, repo, tag: version }).then(function (result) {
+        if (result.data.body) {
+            const fullBody = "Release message: \n" + result.data.body.replace(/\r\n/g, "\n");
+            const releaseBody = fullBody.length > 1000 ? fullBody.substring(0, 1000) + "..." : fullBody;
+            callback(null, releaseBody);
+        } else {
+            callback(null, "");
+        }
+    }, function(error) {
+        if (error.status === 404) {
+            // Got a 404 on Release page, let's fallback
+            const fullBody = "Latest commit message: \n" + fallbackBody;
+            const releaseBody = fullBody.length > 1000 ? fullBody.substring(0, 1000) + "..." : fullBody;
+            return callback(null, releaseBody);
+        }
+
+        // If we're here, something may have gone wrong with the API call
+        callback(null, "");
+    });
 }

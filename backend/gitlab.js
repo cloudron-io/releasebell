@@ -7,7 +7,8 @@ module.exports = exports = {
     verifyToken: verifyToken,
     getStarred: getStarred,
     getReleases: getReleases,
-    getCommit: getCommit
+    getCommit: getCommit,
+    getReleaseBody: getReleaseBody
 };
 
 function verifyToken(token, callback) {
@@ -51,4 +52,20 @@ function getCommit(token, project, sha, callback) {
 
         callback(null, { createdAt: result.body.committed_date });
     });
+}
+
+// Returns { body }
+function getReleaseBody(token, project, version, callback) {
+    assert.strictEqual(typeof token, 'string');
+    assert.strictEqual(typeof project, 'object');
+    assert.strictEqual(typeof version, 'string');
+    assert.strictEqual(typeof callback, 'function');
+
+    // const octokit = new Octokit({ auth: token, userAgent: 'releasebell@cloudron' });
+
+    // const [ owner, repo ] = project.name.split('/');
+    // octokit.repos.getReleaseByTag({ owner, repo, version }).then(function (result) {
+    //     callback(null, { body: result.body });
+    // }, callback);
+    callback(null, { body: "test body" });
 }

@@ -7,10 +7,17 @@ var assert = require('assert'),
     database = require('./database.js'),
     nodemailer = require('nodemailer'),
     handlebars = require('handlebars'),
+    markdown = require('helper-markdown'),
     debug = require('debug')('releasebell/tasks'),
     smtpTransport = require('nodemailer-smtp-transport'),
     gitlab = require('./gitlab.js'),
     github = require('./github.js');
+
+// Register our Markdown helper
+handlebars.registerHelper('markdown', function(text) {
+    text = markdown(text);
+    return new handlebars.SafeString(text);
+});
 
 module.exports = exports = {
     run: run,
@@ -179,7 +186,11 @@ function syncReleasesByProject(user, project, callback) {
 
                     debug(`syncReleasesByProject: [${project.name}] add release ${release.version} notified ${release.notified}`);
 
-                    database.releases.add(release, callback);
+                    api.getReleaseBody(user.githubToken, project, release.version, commit.message, function(error, body) {
+                        release.body = body;
+
+                        database.releases.add(release, callback);
+                    });
                 });
             }, function (error) {
                 if (error) return callback(error);
@@ -262,7 +273,7 @@ function sendNotificationEmail(release, callback) {
                 from: `ReleaseBell <${process.env.CLOUDRON_MAIL_FROM}>`,
                 to: user.email,
                 subject: `${project.name} ${release.version} released`,
-                text: `A new release at ${project.name} with version ${release.version} was published. Read more about this release at ${versionLink}`,
+                text: `A new release at ${project.name} with version ${release.version} was published. ${release.body}. Read more about this release at ${versionLink}`,
                 html: EMAIL_TEMPLATE({ project: project, release: release, versionLink: versionLink, settingsLink: settingsLink })
             };
 
