@@ -39,11 +39,13 @@
               <a href="{{ versionLink }}" style="color: #606266; text-decoration: none;"><font color="#606266">{{ release.version }}</font></a>
           </td>
         </tr>
+        {{#if release.body}}
         <tr>
           <td>
             <span style="color: #606266;">{{markdown release.body }}</span>
           </td>
         </tr>
+        {{/if}}
         <tr>
           <td style="padding-top: 20px; color: #606266; font-family: Helvetica, sans-serif; font-size: 16px;">
             A new release {{ release.version }} for {{ project.name }} was published. Read more about this release on <a href="{{ versionLink }}" style="color: #66b1ff; text-decoration: none;"><font color="#66b1ff">the release page</font></a>.

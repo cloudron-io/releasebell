@@ -87,7 +87,7 @@ function getReleaseBody(token, project, version, fallbackBody, callback) {
     const [ owner, repo ] = project.name.split('/');
     octokit.repos.getReleaseByTag({ owner, repo, tag: version }).then(function (result) {
         if (result.data.body) {
-            const fullBody = "Release message: \n" + result.data.body.replace(/\r\n/g, "\n");
+            const fullBody = result.data.body.replace(/\r\n/g, "\n");
             const releaseBody = fullBody.length > 1000 ? fullBody.substring(0, 1000) + "..." : fullBody;
             callback(null, releaseBody);
         } else {
