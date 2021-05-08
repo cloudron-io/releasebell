@@ -186,11 +186,14 @@ function syncReleasesByProject(user, project, callback) {
 
                     debug(`syncReleasesByProject: [${project.name}] add release ${release.version} notified ${release.notified}`);
 
-                    api.getReleaseBody(user.githubToken, project, release.version, commit.message, function(error, body) {
-                        release.body = body;
+                    if (!release.body) {
+                        // Set fallback body to the commit's message
+                        const fullBody = "Latest commit message: \n" + commit.message;
+                        const releaseBody = fullBody.length > 1000 ? fullBody.substring(0, 1000) + "..." : fullBody;
+                        release.body = releaseBody;
+                    }
 
-                        database.releases.add(release, callback);
-                    });
+                    database.releases.add(release, callback);
                 });
             }, function (error) {
                 if (error) return callback(error);
