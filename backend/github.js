@@ -65,13 +65,13 @@ function getReleases(token, project, callback) {
 
             return octokit.repos.getReleaseByTag({ owner, repo, tag: r.name }).then(function (release) {
                 if (release.data.body) {
-                    const fullBody = release.data.body.replace(/\r\n/g, "\n");
-                    const releaseBody = fullBody.length > 1000 ? fullBody.substring(0, 1000) + "..." : fullBody;
+                    const fullBody = release.data.body.replace(/\r\n/g, '\n');
+                    const releaseBody = fullBody.length > 1000 ? fullBody.substring(0, 1000) + '...' : fullBody;
                     releaseObj.body = releaseBody;
                 }
 
                 return releaseObj;
-            }, function(error) {
+            }, function (/*error*/) {
                 // If we're here, something may have gone wrong with the API call
                 return releaseObj;
             });
