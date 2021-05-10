@@ -57,7 +57,8 @@ function init(callback) {
         user: config[config.defaultEnv].user,
         password: config[config.defaultEnv].password,
         database: config[config.defaultEnv].database,
-        dateStrings: true
+        dateStrings: true,
+        charset: "utf8mb4"
     });
 
     callback();

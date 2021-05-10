@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS releases(
     id VARCHAR(128) NOT NULL UNIQUE,
     projectId VARCHAR(128) NOT NULL,
     version VARCHAR(512) NOT NULL,
+    body TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
     notified BOOLEAN DEFAULT false,
     createdAt BIGINT NOT NULL,
 
