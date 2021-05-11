@@ -1,11 +1,10 @@
 #!/usr/bin/env node
 
-/* jslint node:true */
-/* global it:false */
-/* global xit:false */
-/* global describe:false */
-/* global before:false */
-/* global after:false */
+/* jshint esversion: 8 */
+/* global describe */
+/* global before */
+/* global after */
+/* global it */
 
 'use strict';
 
@@ -17,32 +16,31 @@ var execSync = require('child_process').execSync,
     { Builder, By, until } = require('selenium-webdriver'),
     { Options } = require('selenium-webdriver/chrome');
 
+if (!process.env.USERNAME || !process.env.PASSWORD || !process.env.GITHUB_TOKEN) {
+    console.log('USERNAME, PASSWORD and GITHUB_TOKEN env vars need to be set');
+    process.exit(1);
+}
+
 describe('Application life cycle test', function () {
     this.timeout(0);
 
-    var browser;
+    const LOCATION = 'test';
+    const TEST_TIMEOUT = 10000;
+    const EXEC_ARGS = { cwd: path.resolve(__dirname, '..'), stdio: 'inherit' };
+
     const username = process.env.USERNAME;
     const password = process.env.PASSWORD;
     const ghToken = process.env.GITHUB_TOKEN;
 
-    before(function (done) {
-        if (!process.env.USERNAME) return done(new Error('USERNAME env var not set'));
-        if (!process.env.PASSWORD) return done(new Error('PASSWORD env var not set'));
-        if (!process.env.GITHUB_TOKEN) return done(new Error('GITHUB_TOKEN env var not set'));
+    let browser, app;
 
+    before(function () {
         browser = new Builder().forBrowser('chrome').setChromeOptions(new Options().windowSize({ width: 1280, height: 1024 })).build();
-
-        done();
     });
 
-    after(function (done) {
+    after(function () {
         browser.quit();
-        done();
     });
-
-    var LOCATION = 'test';
-    var TEST_TIMEOUT = parseInt(process.env.TIMEOUT, 10) || 10000;
-    var app;
 
     function visible(selector) {
         return browser.wait(until.elementLocated(selector), TEST_TIMEOUT)
@@ -114,17 +112,12 @@ describe('Application life cycle test', function () {
 
     function getAppInfo() {
         var inspect = JSON.parse(execSync('cloudron inspect'));
-        app = inspect.apps.filter(function (a) { return a.location === LOCATION || a.location === LOCATION + '2'; })[0];
+        app = inspect.apps.filter(function (a) { return a.location.indexOf(LOCATION) === 0; })[0];
         expect(app).to.be.an('object');
     }
 
-    xit('build app', function () {
-        execSync('cloudron build', { cwd: path.resolve(__dirname, '..'), stdio: 'inherit' });
-    });
-
-    it('install app', function () {
-        execSync('cloudron install --location ' + LOCATION, { cwd: path.resolve(__dirname, '..'), stdio: 'inherit' });
-    });
+    xit('build app', function () { execSync('cloudron build', EXEC_ARGS); });
+    it('install app', function () { execSync('cloudron install --location ' + LOCATION, EXEC_ARGS); });
 
     it('can get app information', getAppInfo);
 
@@ -133,32 +126,30 @@ describe('Application life cycle test', function () {
     it('can see projects', checkProjects);
     it('can logout', logout);
 
-    it('restart app', function () {
-        execSync('cloudron restart --app ' + app.id, { cwd: path.resolve(__dirname, '..'), stdio: 'inherit' });
-    });
+    it('restart app', function () { execSync('cloudron restart --app ' + app.id, EXEC_ARGS); });
     it('can login', login);
     it('can see projects', checkProjects);
     it('can logout', logout);
 
-    it('backup app', function () {
-        execSync('cloudron backup create --app ' + app.id, { cwd: path.resolve(__dirname, '..'), stdio: 'inherit' });
-    });
+    it('backup app', function () { execSync('cloudron backup create --app ' + app.id, EXEC_ARGS); });
 
-    it('restore app', function () {
+    it('restore app', async function () {
+        await browser.get('about:blank');
         const backups = JSON.parse(execSync('cloudron backup list --raw'));
-        execSync('cloudron uninstall --app ' + app.id, { cwd: path.resolve(__dirname, '..'), stdio: 'inherit' });
-        execSync('cloudron install --location ' + LOCATION, { cwd: path.resolve(__dirname, '..'), stdio: 'inherit' });
+        execSync('cloudron uninstall --app ' + app.id, EXEC_ARGS);
+        execSync('cloudron install --location ' + LOCATION, EXEC_ARGS);
         getAppInfo();
-        execSync(`cloudron restore --backup ${backups[0].id} --app ${app.id}`, { cwd: path.resolve(__dirname, '..'), stdio: 'inherit' });
+        execSync(`cloudron restore --backup ${backups[0].id} --app ${app.id}`, EXEC_ARGS);
     });
 
     it('can login', login);
     it('can see projects', checkProjects);
     it('can logout', logout);
 
-    it('move to different location', function () {
+    it('move to different location', async function () {
         browser.manage().deleteAllCookies();
-        execSync('cloudron configure --location ' + LOCATION + '2 --app ' + app.id, { cwd: path.resolve(__dirname, '..'), stdio: 'inherit' });
+        await browser.get('about:blank');
+        execSync('cloudron configure --location ' + LOCATION + '2 --app ' + app.id, EXEC_ARGS);
         var inspect = JSON.parse(execSync('cloudron inspect'));
         app = inspect.apps.filter(function (a) { return a.location === LOCATION + '2'; })[0];
         expect(app).to.be.an('object');
@@ -168,14 +159,13 @@ describe('Application life cycle test', function () {
     it('can see projects', checkProjects);
     it('can logout', logout);
 
-    it('uninstall app', function () {
-        execSync('cloudron uninstall --app ' + app.id, { cwd: path.resolve(__dirname, '..'), stdio: 'inherit' });
+    it('uninstall app', async function () {
+        await browser.get('about:blank');
+        execSync('cloudron uninstall --app ' + app.id, EXEC_ARGS);
     });
 
     // test update
-    it('can install app', function () {
-        execSync(`cloudron install --appstore-id ${app.manifest.id} --location ${LOCATION}`, { cwd: path.resolve(__dirname, '..'), stdio: 'inherit' });
-    });
+    it('can install app', function () { execSync(`cloudron install --appstore-id ${app.manifest.id} --location ${LOCATION}`, EXEC_ARGS); });
 
     it('can get app information', getAppInfo);
     it('can login', login);
@@ -183,7 +173,7 @@ describe('Application life cycle test', function () {
     it('can logout', logout);
 
     it('can update', function () {
-        execSync('cloudron update --app ' + app.id, { cwd: path.resolve(__dirname, '..'), stdio: 'inherit' });
+        execSync('cloudron update --app ' + app.id, EXEC_ARGS);
         var inspect = JSON.parse(execSync('cloudron inspect'));
         app = inspect.apps.filter(function (a) { return a.location === LOCATION; })[0];
         expect(app).to.be.an('object');
@@ -193,7 +183,8 @@ describe('Application life cycle test', function () {
     it('can see projects', checkProjects);
     it('can logout', logout);
 
-    it('uninstall app', function () {
-        execSync('cloudron uninstall --app ' + app.id, { cwd: path.resolve(__dirname, '..'), stdio: 'inherit' });
+    it('uninstall app', async function () {
+        await browser.get('about:blank');
+        execSync('cloudron uninstall --app ' + app.id, EXEC_ARGS);
     });
 });
