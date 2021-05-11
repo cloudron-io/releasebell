@@ -1,13 +1,13 @@
 'use strict';
 
-const assert = require('assert'),
+var assert = require('assert'),
     superagent = require('superagent');
 
 module.exports = exports = {
-    verifyToken,
-    getStarred,
-    getReleases,
-    getCommit
+    verifyToken: verifyToken,
+    getStarred: getStarred,
+    getReleases: getReleases,
+    getCommit: getCommit
 };
 
 function verifyToken(token, callback) {
@@ -35,16 +35,20 @@ function getReleases(token, project, callback) {
     superagent.get(project.origin + '/api/v4/projects/' + encodeURIComponent(project.name) + '/repository/tags?order_by=updated&sort=desc').end(function (error, result) {
         if (error) return callback(error);
 
-        const releaseObject = {
-            projectId: project.id,
-            version: result.body.name,
-            createdAt: result.body.commit.created_at,
-            sha: result.body.commit.id,
-        };
+        const releaseObjects = result.body.map(function (r) {
+            const releaseObject = {
+                projectId: project.id,
+                version: r.name, createdAt:
+                r.commit.created_at,
+                sha: r.commit.id,
+            };
 
-        if (result.body.release && release.body.release.description) releaseObject.body = result.body.release.description;
+            if (r.release) releaseObject.body = r.release.description; // tags may not have a "release"
 
-        callback(null, releaseObject);
+            return releaseObject;
+        });
+
+        callback(null, releaseObjects);
     });
 }
 
