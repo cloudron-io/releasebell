@@ -1,6 +1,6 @@
 {
   "name": "releasebell",
-  "version": "1.5.1",
+  "version": "1.7.0",
   "description": "Sibbell alternative",
   "main": "index.js",
   "scripts": {

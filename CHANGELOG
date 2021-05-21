@@ -47,3 +47,8 @@
 [1.6.0]
 * Update base image v3
 
+[1.7.0]
+* Improve notification emails
+* Show new tag description with changelog where possible
+* Thanks to Tomer Shvueli for contributing those features!
+
