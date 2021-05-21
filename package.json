@@ -11,7 +11,7 @@
   "dependencies": {
     "@octokit/rest": "^18.5.3",
     "async": "^3.2.0",
-    "connect-lastmile": "^2.0.0",
+    "connect-lastmile": "^2.1.0",
     "connect-timeout": "^1.9.0",
     "db-migrate": "^0.11.12",
     "db-migrate-mysql": "^2.1.2",
@@ -28,7 +28,7 @@
     "uuid": "^8.3.2"
   },
   "devDependencies": {
-    "chromedriver": "^90.0.0",
+    "chromedriver": "^90.0.1",
     "ejs": "^3.1.6",
     "expect.js": "^0.3.1",
     "mocha": "^8.4.0",
