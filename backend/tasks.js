@@ -39,12 +39,13 @@ No email configuration found. Set the following environment variables:
 }
 
 const EMAIL_TEMPLATE = handlebars.compile(fs.readFileSync(path.resolve(__dirname, 'notification.template'), 'utf8'));
-var tasksActive = false;
+let gTasksActive = false;
+let gRetryAt = 0;
 
 function run() {
-    if (tasksActive) return debug('run: already running');
+    if (gTasksActive) return debug('run: already running');
 
-    tasksActive = true;
+    gTasksActive = true;
 
     debug('run: start');
 
@@ -57,9 +58,12 @@ function run() {
             sendNotifications(function (error) {
                 if (error) console.error(error);
 
-                // just keep polling for good every hour
-                setTimeout(run, 60 * 60 * 1000);
-                tasksActive = false;
+                // just keep polling for good every hour otherwise whenever github tells us we can try again + 60sec
+                if (gRetryAt) setTimeout(run, (60*1000) + (gRetryAt - Date.now()));
+                else setTimeout(run, 60 * 60 * 1000);
+
+                gRetryAt = 0;
+                gTasksActive = false;
 
                 debug('run: done');
             });
@@ -156,10 +160,7 @@ function syncReleasesByProject(user, project, callback) {
     }
 
     api.getReleases(user.githubToken, project, function (error, upstreamReleases) {
-        if (error) {
-            console.error(error)
-            return callback();
-        }
+        if (error) return callback(error);
 
         database.releases.list(project.id, function (error, trackedReleases) {
             if (error) return callback(error);
@@ -170,30 +171,33 @@ function syncReleasesByProject(user, project, callback) {
 
             // only get the full commit for new releases
             async.eachLimit(newReleases, 10, function (release, callback) {
-                api.getCommit(user.githubToken, project, release.sha, function (error, commit) {
-                    if (error) {
-                        console.error(error)
-                        return callback();
-                    }
+                api.getReleaseBody(user.githubToken, project, release.version, function (error, result) {
+                    if (error) console.error(`Failed to get release body for ${project.name} ${release.version}. Falling back to commit message.`, error);
 
-                    // before initial successful sync and if notifications for this project are enabled, we mark the release as not notified yet
-                    release.notified = !project.lastSuccessfulSyncAt ? true : !project.enabled;
-                    release.createdAt = new Date(commit.createdAt).getTime();
-                    // old code did not get all tags properly. this hack limits notifications to last 10 days
-                    if (Date.now() - release.createdAt > 10 * 24 * 60 * 60 * 1000) release.notified = true;
+                    release.body = result || '';
 
-                    delete release.sha;
+                    api.getCommit(user.githubToken, project, release.sha, function (error, commit) {
+                        if (error) return callback(error);
 
-                    debug(`syncReleasesByProject: [${project.name}] add release ${release.version} notified ${release.notified}`);
+                        // before initial successful sync and if notifications for this project are enabled, we mark the release as not notified yet
+                        release.notified = !project.lastSuccessfulSyncAt ? true : !project.enabled;
+                        release.createdAt = new Date(commit.createdAt).getTime();
+                        // old code did not get all tags properly. this hack limits notifications to last 10 days
+                        if (Date.now() - release.createdAt > 10 * 24 * 60 * 60 * 1000) release.notified = true;
 
-                    if (!release.body) {
-                        // Set fallback body to the commit's message
-                        const fullBody = "Latest commit message: \n" + commit.message;
-                        const releaseBody = fullBody.length > 1000 ? fullBody.substring(0, 1000) + "..." : fullBody;
-                        release.body = releaseBody;
-                    }
+                        delete release.sha;
 
-                    database.releases.add(release, callback);
+                        debug(`syncReleasesByProject: [${project.name}] add release ${release.version} notified ${release.notified}`);
+
+                        if (!release.body) {
+                            // Set fallback body to the commit's message
+                            const fullBody = "Latest commit message: \n" + commit.message;
+                            const releaseBody = fullBody.length > 1000 ? fullBody.substring(0, 1000) + "..." : fullBody;
+                            release.body = releaseBody;
+                        }
+
+                        database.releases.add(release, callback);
+                    });
                 });
             }, function (error) {
                 if (error) return callback(error);
@@ -216,10 +220,7 @@ function syncReleasesByUser(user, callback) {
 
         async.eachSeries(projects, function (project, callback) {
             syncReleasesByProject(user, project, callback);
-        }, function (error) {
-            if (error) console.error(error);
-            callback();
-        });
+        }, callback);
     });
 }
 
@@ -232,6 +233,7 @@ function syncReleases(callback) {
         async.eachSeries(result, function (user, callback) {
             syncReleasesByUser(user, function (error) {
                 if (error) console.error(error);
+                if (error && error.retryAt) gRetryAt = error.retryAt;
 
                 // errors are ignored here
                 callback();

@@ -4,10 +4,11 @@ var assert = require('assert'),
     superagent = require('superagent');
 
 module.exports = exports = {
-    verifyToken: verifyToken,
-    getStarred: getStarred,
-    getReleases: getReleases,
-    getCommit: getCommit
+    verifyToken,
+    getStarred,
+    getReleases,
+    getReleaseBody,
+    getCommit
 };
 
 function verifyToken(token, callback) {
@@ -50,6 +51,15 @@ function getReleases(token, project, callback) {
 
         callback(null, releaseObjects);
     });
+}
+
+function getReleaseBody(token, project, version, callback) {
+    assert.strictEqual(typeof token, 'string');
+    assert.strictEqual(typeof project, 'object');
+    assert.strictEqual(typeof version, 'string');
+    assert.strictEqual(typeof callback, 'function');
+
+    callback(null, '');
 }
 
 // Returns { createdAt, message }

@@ -52,3 +52,5 @@
 * Show new tag description with changelog where possible
 * Thanks to Tomer Shvueli for contributing those features!
 
+[1.7.1]
+* Limit parallel github release tag fetching to avoid rate-limits

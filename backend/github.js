@@ -1,14 +1,14 @@
 'use strict';
 
 var assert = require('assert'),
-    async = require('async'),
     { Octokit } = require('@octokit/rest');
 
 module.exports = exports = {
-    verifyToken: verifyToken,
-    getStarred: getStarred,
-    getReleases: getReleases,
-    getCommit: getCommit
+    verifyToken,
+    getStarred,
+    getReleases,
+    getReleaseBody,
+    getCommit
 };
 
 // translate some api errors
@@ -17,6 +17,7 @@ function handleError(callback) {
         if (error) {
             if (error.status === 403 && error.message.indexOf('API rate limit exceeded') === 0) {
                 error.message = 'GitHub rate limit exceeded. Please wait a bit.';
+                error.retryAt = error.headers['x-ratelimit-reset'] ? parseInt(error.headers['x-ratelimit-reset'])*1000 : 0;
             }
         }
 
@@ -56,36 +57,42 @@ function getReleases(token, project, callback) {
 
     const [ owner, repo ] = project.name.split('/');
     octokit.paginate(octokit.repos.listTags, { owner, repo }).then(function (result) { // tags have no created_at field
-        let releases = [];
-
-        async.eachLimit(result, 10, function (r, callback) {
-            const releaseObj = {
+        const releases = result.map(function (r) {
+            return {
                 projectId: project.id,
                 version: r.name,
                 createdAt: null,
-                sha: r.commit.sha
+                sha: r.commit.sha,
+                body: '' // will be filled later to avoid fetchin all releases all the time
             };
-
-            octokit.repos.getReleaseByTag({ owner, repo, tag: r.name }).then(function (release) {
-                if (release.data.body) {
-                    const fullBody = release.data.body.replace(/\r\n/g, '\n');
-                    const releaseBody = fullBody.length > 1000 ? fullBody.substring(0, 1000) + '...' : fullBody;
-                    releaseObj.body = releaseBody;
-                }
-
-                releases.push(releaseObj);
-
-                callback(null);
-            }, callback);
-        }, function (error) {
-            if (error) {
-                console.error('Failed to get release tags.', error);
-                return handleError(callback)(error);
-            }
-
-            callback(null, releases);
         });
+
+        callback(null, releases);
     }, handleError(callback));
+}
+
+function getReleaseBody(token, project, version, callback) {
+    assert.strictEqual(typeof token, 'string');
+    assert.strictEqual(typeof project, 'object');
+    assert.strictEqual(typeof version, 'string');
+    assert.strictEqual(typeof callback, 'function');
+
+    const octokit = new Octokit({ auth: token, userAgent: 'releasebell@cloudron' });
+    const [ owner, repo ] = project.name.split('/');
+
+    octokit.repos.getReleaseByTag({ owner, repo, tag: version }).then(function (release) {
+        if (!release.data.body) return callback(null, '');
+
+        const fullBody = release.data.body.replace(/\r\n/g, '\n');
+
+        callback(null, fullBody.length > 1000 ? fullBody.substring(0, 1000) + '...' : fullBody);
+
+    }, function (error) {
+        // no release tags is not an error
+        if (error.status === 404) return callback(null, '');
+
+        handleError(callback)(error);
+    });
 }
 
 // Returns { createdAt, message }
