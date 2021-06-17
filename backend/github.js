@@ -17,7 +17,7 @@ function handleError(callback) {
         if (error) {
             if (error.status === 403 && error.message.indexOf('API rate limit exceeded') === 0) {
                 error.message = 'GitHub rate limit exceeded. Please wait a bit.';
-                error.retryAt = error.headers['x-ratelimit-reset'] ? parseInt(error.headers['x-ratelimit-reset'])*1000 : 0;
+                error.retryAt = error.response.headers['x-ratelimit-reset'] ? parseInt(error.response.headers['x-ratelimit-reset'])*1000 : 0;
             }
         }
 
