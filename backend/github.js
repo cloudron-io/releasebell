@@ -107,5 +107,5 @@ function getCommit(token, project, commit_sha, callback) {
     const [ owner, repo ] = project.name.split('/');
     octokit.git.getCommit({ owner, repo, commit_sha }).then(function (result) {
         callback(null, { createdAt: result.data.committer.date, message: result.data.message });
-    }, callback);
+    }, handleError(callback));
 }
