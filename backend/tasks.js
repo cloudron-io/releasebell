@@ -42,6 +42,14 @@ const EMAIL_TEMPLATE = handlebars.compile(fs.readFileSync(path.resolve(__dirname
 let gTasksActive = false;
 let gRetryAt = 0;
 
+// https://www.w3docs.com/snippets/javascript/how-to-randomize-shuffle-a-javascript-array.html
+function shuffleArray(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+}
+
 function run() {
     if (gTasksActive) return debug('run: already running');
 
@@ -77,6 +85,8 @@ function syncProjects(callback) {
 
     database.users.list(function (error, result) {
         if (error) return callback(error);
+
+        shuffleArray(result);
 
         async.each(result, function (user, callback) {
             // errors are ignored here
@@ -219,6 +229,8 @@ function syncReleasesByUser(user, callback) {
     database.projects.list(user.id, function (error, projects) {
         if (error) return callback(error);
 
+        shuffleArray(projects);
+
         async.eachSeries(projects, function (project, callback) {
             syncReleasesByProject(user, project, callback);
         }, callback);
@@ -230,6 +242,8 @@ function syncReleases(callback) {
 
     database.users.list(function (error, result) {
         if (error) return callback(error);
+
+        shuffleArray(result);
 
         async.eachSeries(result, function (user, callback) {
             syncReleasesByUser(user, function (error) {
