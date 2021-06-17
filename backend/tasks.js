@@ -59,13 +59,14 @@ function run() {
                 if (error) console.error(error);
 
                 // just keep polling for good every hour otherwise whenever github tells us we can try again + 60sec
-                if (gRetryAt) setTimeout(run, (60*1000) + (gRetryAt - Date.now()));
-                else setTimeout(run, 60 * 60 * 1000);
+                const nextRun = gRetryAt ? ((60*1000) + (gRetryAt - Date.now())) : (60 * 60 * 1000);
 
                 gRetryAt = 0;
                 gTasksActive = false;
 
-                debug('run: done');
+                debug(`run: done. Next run in ${nextRun/1000}s at ${new Date(nextRun + Date.now())}`);
+
+                setTimeout(run, nextRun);
             });
         });
     });
