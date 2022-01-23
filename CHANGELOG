@@ -54,3 +54,7 @@
 
 [1.7.1]
 * Limit parallel github release tag fetching to avoid rate-limits
+
+[1.7.2]
+* Update base image to 3.2.0
+
