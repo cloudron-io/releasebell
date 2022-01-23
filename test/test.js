@@ -10,7 +10,7 @@
 
 require('chromedriver');
 
-var execSync = require('child_process').execSync,
+const execSync = require('child_process').execSync,
     expect = require('expect.js'),
     path = require('path'),
     { Builder, By, until } = require('selenium-webdriver'),
@@ -42,76 +42,48 @@ describe('Application life cycle test', function () {
         browser.quit();
     });
 
-    function visible(selector) {
-        return browser.wait(until.elementLocated(selector), TEST_TIMEOUT)
-            .then(function () {
-                return browser.wait(until.elementIsVisible(browser.findElement(selector)), TEST_TIMEOUT);
-            });
+    async function visible(selector) {
+        await browser.wait(until.elementLocated(selector), TEST_TIMEOUT);
+        await browser.wait(until.elementIsVisible(browser.findElement(selector)), TEST_TIMEOUT);
     }
 
-    function login(callback) {
-        browser.get('https://' + app.fqdn).then(function () {
-            return visible(By.id('username'));
-        }).then(function () {
-            return browser.findElement(By.id('username')).sendKeys(username);
-        }).then(function () {
-            return browser.findElement(By.id('password')).sendKeys(password);
-        }).then(function () {
-            return browser.findElement(By.xpath('//button[@type="submit"]')).click();
-        }).then(function () {
-            return browser.wait(until.elementLocated(By.xpath('//*[contains(text(), " Welcome to Release Bell")]')), TEST_TIMEOUT);
-        }).then(function () {
-            return browser.sleep(3000);
-        }).then(function () {
-            callback();
-        });
+    async function login() {
+        await browser.get('https://' + app.fqdn);
+        await visible(By.id('username'));
+        await browser.findElement(By.id('username')).sendKeys(username);
+        await browser.findElement(By.id('password')).sendKeys(password);
+        await browser.findElement(By.xpath('//button[@type="submit"]')).click();
+        await browser.wait(until.elementLocated(By.xpath('//*[contains(text(), " Welcome to Release Bell")]')), TEST_TIMEOUT);
+        await browser.sleep(3000);
     }
 
-    function logout(callback) {
-        browser.get('https://' + app.fqdn).then(function () {
-            return browser.sleep(3000);
-        }).then(function () {
-            return visible(By.xpath('//li[contains(text(), "Logout")]'));
-        }).then(function () {
-            return browser.findElement(By.xpath('//li[contains(text(), "Logout")]')).click();
-        }).then(function () {
-            return browser.findElement(By.id('username')).sendKeys(username);
-        }).then(function () {
-            callback();
-        });
+    async function logout() {
+        await browser.get('https://' + app.fqdn);
+        await browser.sleep(3000);
+        await visible(By.xpath('//li[contains(text(), "Logout")]'));
+        await browser.findElement(By.xpath('//li[contains(text(), "Logout")]')).click();
+        await browser.findElement(By.id('username')).sendKeys(username);
     }
 
-    function setGithubToken(callback) {
-        browser.get('https://' + app.fqdn).then(function () {
-            return browser.sleep(3000);
-        }).then(function () {
-            return visible(By.xpath('//li[contains(text(), "Profile")]'));
-        }).then(function () {
-            return browser.findElement(By.xpath('//li[contains(text(), "Profile")]')).click();
-        }).then(function () {
-            return browser.findElement(By.id('githubToken')).sendKeys(ghToken);
-        }).then(function () {
-            return browser.findElement(By.id('saveProfile')).click();
-        }).then(function () {
-            console.log('waiting for 5 minutes for syncing');
-            return browser.sleep(5 * 60 * 1000);
-        }).then(function () {
-            callback();
-        });
+    async function setGithubToken() {
+        await browser.get('https://' + app.fqdn);
+        await browser.sleep(3000);
+        await visible(By.xpath('//li[contains(text(), "Profile")]'));
+        await browser.findElement(By.xpath('//li[contains(text(), "Profile")]')).click();
+        await browser.findElement(By.id('githubToken')).sendKeys(ghToken);
+        await browser.findElement(By.id('saveProfile')).click();
+        console.log('waiting for 5 minutes for syncing');
+        await browser.sleep(5 * 60 * 1000);
     }
 
-    function checkProjects(callback) {
-        browser.get('https://' + app.fqdn).then(function () {
-            return browser.sleep(3000);
-        }).then(function () {
-            return browser.findElement(By.xpath('//a[@href="https://github.com/cloudron-io/surfer"]'));
-        }).then(function () {
-            callback();
-        });
+    async function checkProjects() {
+        await browser.get('https://' + app.fqdn);
+        await browser.sleep(3000);
+        await browser.findElement(By.xpath('//a[@href="https://github.com/cloudron-io/surfer"]'));
     }
 
     function getAppInfo() {
-        var inspect = JSON.parse(execSync('cloudron inspect'));
+        const inspect = JSON.parse(execSync('cloudron inspect'));
         app = inspect.apps.filter(function (a) { return a.location.indexOf(LOCATION) === 0; })[0];
         expect(app).to.be.an('object');
     }
