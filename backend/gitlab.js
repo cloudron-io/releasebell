@@ -34,6 +34,7 @@ function getReleases(token, project, callback) {
     // we get tags instead of releases because some projects like GitLab itself only do releases for the main release (and not for patch)
     // https://docs.gitlab.com/ee/api/tags.html
     superagent.get(project.origin + '/api/v4/projects/' + encodeURIComponent(project.name) + '/repository/tags?order_by=updated&sort=desc').end(function (error, result) {
+        if (error && error.status === 404) return callback(null, []);
         if (error) return callback(error);
 
         const releaseObjects = result.body.map(function (r) {

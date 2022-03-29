@@ -1,7 +1,9 @@
 'use strict';
 
 var assert = require('assert'),
-    { Octokit } = require('@octokit/rest');
+    { Octokit } = require('@octokit/rest'),
+    { retry } = require('@octokit/plugin-retry'),
+    { throttling } = require('@octokit/plugin-throttling');
 
 module.exports = exports = {
     verifyToken,
@@ -10,6 +12,34 @@ module.exports = exports = {
     getReleaseBody,
     getCommit
 };
+
+function buildOctokit(token) {
+    const CustomOctokit = Octokit.plugin(retry, throttling);
+    const octokit = new CustomOctokit({
+        auth: token,
+        userAgent: 'releasebell@cloudron',
+        throttle: {
+            onRateLimit: (retryAfter, options) => {
+              octokit.log.warn(`Request quota exhausted for request ${options.method} ${options.url}`);
+
+              if (options.request.retryCount === 0) {
+                // only retries once
+                octokit.log.info(`Retrying after ${retryAfter} seconds!`);
+                return true;
+              }
+            },
+            onAbuseLimit: (retryAfter, options) => {
+              // does not retry, only logs a warning
+              octokit.log.warn(`Abuse detected for request ${options.method} ${options.url}`);
+            },
+        },
+        retry: {
+            doNotRetry: ["429"],
+        },
+    });
+
+    return octokit;
+}
 
 // translate some api errors
 function handleError(callback) {
@@ -29,7 +59,7 @@ function verifyToken(token, callback) {
     assert.strictEqual(typeof token, 'string');
     assert.strictEqual(typeof callback, 'function');
 
-    const octokit = new Octokit({ auth: token, userAgent: 'releasebell@cloudron' });
+    const octokit = buildOctokit(token);
 
     octokit.users.getAuthenticated().then(function () {
         callback();
@@ -40,7 +70,7 @@ function getStarred(token, callback) {
     assert.strictEqual(typeof token, 'string');
     assert.strictEqual(typeof callback, 'function');
 
-    const octokit = new Octokit({ auth: token, userAgent: 'releasebell@cloudron' });
+    const octokit = buildOctokit(token);
 
     octokit.paginate(octokit.activity.listReposStarredByAuthenticatedUser).then(function (result) {
         callback(null, result);
@@ -53,7 +83,7 @@ function getReleases(token, project, callback) {
     assert.strictEqual(typeof project, 'object');
     assert.strictEqual(typeof callback, 'function');
 
-    const octokit = new Octokit({ auth: token, userAgent: 'releasebell@cloudron' });
+    const octokit = buildOctokit(token);
 
     const [ owner, repo ] = project.name.split('/');
     octokit.paginate(octokit.repos.listTags, { owner, repo }).then(function (result) { // tags have no created_at field
@@ -77,7 +107,7 @@ function getReleaseBody(token, project, version, callback) {
     assert.strictEqual(typeof version, 'string');
     assert.strictEqual(typeof callback, 'function');
 
-    const octokit = new Octokit({ auth: token, userAgent: 'releasebell@cloudron' });
+    const octokit = buildOctokit(token);
     const [ owner, repo ] = project.name.split('/');
 
     octokit.repos.getReleaseByTag({ owner, repo, tag: version }).then(function (release) {
@@ -102,7 +132,7 @@ function getCommit(token, project, commit_sha, callback) {
     assert.strictEqual(typeof commit_sha, 'string');
     assert.strictEqual(typeof callback, 'function');
 
-    const octokit = new Octokit({ auth: token, userAgent: 'releasebell@cloudron' });
+    const octokit = buildOctokit(token);
 
     const [ owner, repo ] = project.name.split('/');
     octokit.git.getCommit({ owner, repo, commit_sha }).then(function (result) {
