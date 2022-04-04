@@ -20,17 +20,13 @@ function buildOctokit(token) {
         userAgent: 'releasebell@cloudron',
         throttle: {
             onRateLimit: (retryAfter, options) => {
-              octokit.log.warn(`Request quota exhausted for request ${options.method} ${options.url}`);
-
-              if (options.request.retryCount === 0) {
-                // only retries once
-                octokit.log.info(`Retrying after ${retryAfter} seconds!`);
+                console.log(`Request quota exhausted for request ${options.method} ${options.url}`);
+                console.log(`Already retried ${options.request.retryCount} times. Retrying again after ${retryAfter} seconds!`);
                 return true;
-              }
             },
             onAbuseLimit: (retryAfter, options) => {
               // does not retry, only logs a warning
-              octokit.log.warn(`Abuse detected for request ${options.method} ${options.url}`);
+              console.log(`Abuse detected for request ${options.method} ${options.url}`);
             },
         },
         retry: {
@@ -86,7 +82,7 @@ function getReleases(token, project, callback) {
     const octokit = buildOctokit(token);
 
     const [ owner, repo ] = project.name.split('/');
-    octokit.paginate(octokit.repos.listTags, { owner, repo }).then(function (result) { // tags have no created_at field
+    octokit.paginate(octokit.repos.listTags, { owner, repo, per_page: 100 }).then(function (result) { // tags have no created_at field
         const releases = result.map(function (r) {
             return {
                 projectId: project.id,
