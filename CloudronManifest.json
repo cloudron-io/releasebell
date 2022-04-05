@@ -9,7 +9,8 @@
     "releases",
     "github"
   ],
-  "version": "1.7.3",
+  "version": "1.7.4",
+  "upstreamVersion": "1.7.4",
   "healthCheckPath": "/api/v1/status",
   "httpPort": 3000,
   "manifestVersion": 2,
@@ -29,6 +30,6 @@
   ],
   "forumUrl": "https://forum.cloudron.io/category/55/release-bell",
   "changelog": "file://CHANGELOG",
-  "minBoxVersion": "5.4.0",
+  "minBoxVersion": "7.1.2",
   "documentationUrl": "https://docs.cloudron.io/apps/releasebell/"
 }
