@@ -49,7 +49,7 @@
           <el-table :data="projects" v-show="projects && projects.length" stripe style="width: 100%" :default-sort="{ prop: 'name', order: 'descending' }">
             <el-table-column prop="name" label="Project Name" sortable :sort-method="sort">
               <template slot-scope="scope">
-                <a :href="'https://github.com/' + scope.row.name" target="_blank" v-show="scope.row.type === 'github'">{{ scope.row.name }}</a>
+                <a :href="'https://github.com/' + scope.row.name" target="_blank" v-show="scope.row.type === 'github' || scope.row.type === 'github_manual'">{{ scope.row.name }}</a>
                 <a :href="scope.row.origin + '/' + scope.row.name" target="_blank" v-show="scope.row.type === 'gitlab'">{{ scope.row.name }}</a>
               </template>
             </el-table-column>
@@ -116,13 +116,13 @@
           <el-table :data="projects" v-show="projects && projects.length" stripe style="width: 100%" :default-sort="{ prop: 'createdAt', order: 'descending' }">
             <el-table-column prop="name" label="Project Name" sortable :sort-method="sort">
               <template slot-scope="scope">
-                <a :href="'https://github.com/' + scope.row.name" target="_blank" v-show="scope.row.type === 'github'">{{ scope.row.name }}</a>
+                <a :href="'https://github.com/' + scope.row.name" target="_blank" v-show="scope.row.type === 'github' || scope.row.type === 'github_manual'">{{ scope.row.name }}</a>
                 <a :href="scope.row.origin + '/' + scope.row.name" target="_blank" v-show="scope.row.type === 'gitlab'">{{ scope.row.name }}</a>
               </template>
             </el-table-column>
             <el-table-column prop="version" align="center" label="Last Version" sortable>
               <template slot-scope="scope">
-                <a :href="'https://github.com/' + scope.row.name + '/releases/tag/' + scope.row.version" target="_blank" v-show="scope.row.type === 'github'">{{ scope.row.version }}</a>
+                <a :href="'https://github.com/' + scope.row.name + '/releases/tag/' + scope.row.version" target="_blank" v-show="scope.row.type === 'github' || scope.row.type === 'github_manual'">{{ scope.row.version }}</a>
                 <a :href="scope.row.origin + '/' + scope.row.name + '/-/releases/' + scope.row.version" target="_blank" v-show="scope.row.type === 'gitlab'">{{ scope.row.version }}</a>
               </template>
             </el-table-column>

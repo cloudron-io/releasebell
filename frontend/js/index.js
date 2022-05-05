@@ -102,7 +102,7 @@ new Vue({
                 type: this.addProject.type,
                 name: name,
                 origin: origin
-            }
+            };
 
             this.addProject.busy = true;
             superagent.post('/api/v1/projects/').query({ username: that.login.username, password: that.login.password }).send(data).end(function (error, result) {
