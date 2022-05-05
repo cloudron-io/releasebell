@@ -65,3 +65,6 @@
 [1.7.4]
 * Increase Github page size to reduce risk of API rate limits
 
+[1.7.5]
+* Show project names for manually added GitHub projects
+
