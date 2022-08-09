@@ -68,3 +68,7 @@
 [1.7.5]
 * Show project names for manually added GitHub projects
 
+[1.7.6]
+* Add dark-mode in notification emails
+* Update nodejs dependencies
+
