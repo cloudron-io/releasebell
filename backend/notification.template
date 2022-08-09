@@ -13,6 +13,9 @@
       padding: 0 !important;
       height: 100% !important;
       width: 100% !important;
+      background: white;
+      color: #393939;
+      font-family: Helvetica, sans-serif;
     }
 
     /* What it does: Stops email clients resizing small text. */
@@ -20,23 +23,49 @@
       -ms-text-size-adjust: 100%;
       -webkit-text-size-adjust: 100%;
     }
+
+    a {
+      color: #66b1ff;
+      text-decoration: none;
+    }
+
+    a:hover {
+      color: #f91880;
+    }
+
+    .header {
+      background-color: #409eff;
+      border-radius: 4px;
+    }
+
+    .header a {
+      color: #fff;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      body {
+        background: #1c1c1c;
+        color: #959595;
+      }
+    }
+
   </style>
 </head>
 
-<body style="margin: 0; padding: 0;">
+<body>
 
-<table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="border: 1px solid #cccccc; margin-top: 20px; margin-bottom: 30px;">
+<table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="border: 0; padding: 20px;">
   <tr>
-    <td align="center" bgcolor="#409eff" style="padding: 40px 0 30px 0; color: #ffffff; font-family: Helvetica, sans-serif; font-size: 20px;">
-        <a href="{{ versionLink }}" style="color: #ffffff; text-decoration: none;"><font color="#ffffff">{{ project.name }}</font></a>
+    <td align="center" class="header" style="padding: 40px 0 30px 0;">
+        <a href="{{ versionLink }}">{{ project.name }}</a>
     </td>
   </tr>
   <tr>
-    <td bgcolor="#ffffff" style="padding: 40px 30px 40px 30px;">
+    <td style="padding: 40px 30px 40px 30px;">
       <table border="0" cellpadding="0" cellspacing="0" width="100%">
         <tr>
-          <td style="color: #606266; font-family: Helvetica, sans-serif; font-size: 20px;">
-              <a href="{{ versionLink }}" style="color: #606266; text-decoration: none;"><font color="#606266">{{ release.version }}</font></a>
+          <td>
+            <a href="{{ versionLink }}" style="color: #606266;">{{ release.version }}</a>
           </td>
         </tr>
         {{#if release.body}}
@@ -47,17 +76,17 @@
         </tr>
         {{/if}}
         <tr>
-          <td style="padding-top: 20px; color: #606266; font-family: Helvetica, sans-serif; font-size: 16px;">
-            A new release {{ release.version }} for {{ project.name }} was published. Read more about this release on <a href="{{ versionLink }}" style="color: #66b1ff; text-decoration: none;"><font color="#66b1ff">the release page</font></a>.
+          <td style="padding-top: 20px; color: #606266; font-size: 16px;">
+            A new release {{ release.version }} for {{ project.name }} was published. Read more about this release on <a href="{{ versionLink }}">the release page</a>.
           </td>
         </tr>
       </table>
     </td>
   </tr>
   <tr>
-    <td bgcolor="#ffffff" style="padding: 30px 30px 30px 30px; color: #c6c6c6; font-family: Helvetica, sans-serif; font-size: 12px;">
-      You received this email because you follow this project on <a href="https://git.cloudron.io/cloudron/releasebell" style="color: #66b1ff; text-decoration: none;"><font color="#66b1ff">ReleaseBell</font></a>.
-      If you'd prefer not to receive these emails, you can <a href="{{ settingsLink }}" style="color: #66b1ff; text-decoration: none;"><font color="#66b1ff">change your notification settings</font></a>.
+    <td style="padding: 30px 30px 30px 30px; font-size: 12px;">
+      You received this email because you follow this project on <a href="https://git.cloudron.io/cloudron/releasebell">ReleaseBell</a>.
+      If you'd prefer not to receive these emails, you can <a href="{{ settingsLink }}">change your notification settings</a>.
     </td>
   </tr>
 </table>
