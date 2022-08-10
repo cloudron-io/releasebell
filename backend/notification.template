@@ -15,7 +15,6 @@
       width: 100% !important;
       background: white;
       color: #393939;
-      font-family: Helvetica, sans-serif;
     }
 
     /* What it does: Stops email clients resizing small text. */
@@ -33,15 +32,6 @@
       color: #f91880;
     }
 
-    .header {
-      background-color: #409eff;
-      border-radius: 4px;
-    }
-
-    .header a {
-      color: #fff;
-    }
-
     @media (prefers-color-scheme: dark) {
       body {
         background: #1c1c1c;
@@ -54,14 +44,14 @@
 
 <body>
 
-<table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="border: 0; padding: 20px;">
+<table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="border: 0; padding: 20px; font-family: Helvetica, sans-serif;">
   <tr>
-    <td align="center" class="header" style="padding: 40px 0 30px 0;">
-        <a href="{{ versionLink }}">{{ project.name }}</a>
+    <td align="center" class="header" style="padding: 40px 0 30px 0; background-color: #409eff; border-radius: 4px; font-size: 20px;">
+        <a href="{{ versionLink }}" style="color: #fff;">{{ project.name }}</a>
     </td>
   </tr>
   <tr>
-    <td style="padding: 40px 30px 40px 30px;">
+    <td style="padding: 40px 30px 40px 30px; font-size: 16px;">
       <table border="0" cellpadding="0" cellspacing="0" width="100%">
         <tr>
           <td>
@@ -71,7 +61,7 @@
         {{#if release.body}}
         <tr>
           <td>
-            <span style="color: #606266;">{{markdown release.body }}</span>
+            <span style="color: #606266; font-size: 14px;">{{markdown release.body }}</span>
           </td>
         </tr>
         {{/if}}
