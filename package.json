@@ -9,31 +9,31 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@octokit/plugin-retry": "^3.0.9",
-    "@octokit/plugin-throttling": "^4.1.0",
-    "@octokit/rest": "^19.0.3",
+    "@octokit/plugin-retry": "^4.0.3",
+    "@octokit/plugin-throttling": "^4.3.2",
+    "@octokit/rest": "^19.0.5",
     "async": "^3.2.4",
     "connect-lastmile": "^2.1.1",
     "connect-timeout": "^1.9.0",
     "db-migrate": "^0.11.13",
     "db-migrate-mysql": "^2.2.0",
     "debug": "^4.3.4",
-    "express": "^4.18.1",
+    "express": "^4.18.2",
     "handlebars": "^4.7.7",
     "helper-markdown": "^1.0.0",
     "ldapjs": "^2.3.3",
     "mysql": "^2.18.1",
-    "nodemailer": "^6.7.7",
+    "nodemailer": "^6.8.0",
     "nodemailer-smtp-transport": "^2.7.4",
-    "superagent": "^8.0.0",
+    "superagent": "^8.0.6",
     "supererror": "^0.7.2",
-    "uuid": "^8.3.2"
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "chromedriver": "^104.0.0",
+    "chromedriver": "^108.0.0",
     "expect.js": "^0.3.1",
-    "mocha": "^10.0.0",
-    "selenium-server-standalone-jar": "^3.141.59",
-    "selenium-webdriver": "^4.4.0"
+    "mocha": "^10.2.0",
+    "selenium-server-standalone-jar": "^4.7.1",
+    "selenium-webdriver": "^4.7.1"
   }
 }
