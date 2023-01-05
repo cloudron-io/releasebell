@@ -72,3 +72,6 @@
 * Add dark-mode in notification emails
 * Update nodejs dependencies
 
+[1.7.7]
+* Update to Cloudron base image 4
+
