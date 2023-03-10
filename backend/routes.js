@@ -132,19 +132,21 @@ function profileGet(req, res, next) {
 function profileUpdate(req, res, next) {
     assert.strictEqual(typeof req.user, 'object');
 
-    github.verifyToken(req.body.githubToken, function (error) {
+    const githubToken = req.body.githubToken || '';
+
+    github.verifyToken(githubToken, function (error) {
         if (error) return next(new HttpError(402, error.message));
 
-        database.users.update(req.user.id, req.body, function (error) {
+        database.users.update(req.user.id, { email: req.body.email, githubToken }, function (error) {
             if (error) return next(new HttpError(500, error));
 
             req.user.email = req.body.email;
-            req.user.githubToken = req.body.githubToken;
+            req.user.githubToken = githubToken;
 
             next(new HttpSuccess(202, {}));
 
             // kick off a round of syncing for the new github token
-            tasks.run();
+            if (githubToken) tasks.run();
         });
     });
 }

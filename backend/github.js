@@ -55,6 +55,8 @@ function verifyToken(token, callback) {
     assert.strictEqual(typeof token, 'string');
     assert.strictEqual(typeof callback, 'function');
 
+    if (!token) return callback(null);
+
     const octokit = buildOctokit(token);
 
     octokit.users.getAuthenticated().then(function () {
