@@ -105,9 +105,6 @@ function projectsAdd(project, callback) {
     project.enabled = true;
     project.lastSuccessfulSyncAt = 0;
 
-    // don't store
-    delete release.sha;
-
     db.query('INSERT INTO projects SET ?', project, function (error) {
         if (error) return callback(error);
         callback(null, projectPostprocess(project));
@@ -222,6 +219,9 @@ function releasesAdd(release, callback) {
     assert.strictEqual(typeof callback, 'function');
 
     release.id = uuid.v4();
+
+    // don't store
+    delete release.sha;
 
     db.query('INSERT INTO releases SET ?', release, function (error) {
         if (error) return callback(error);
