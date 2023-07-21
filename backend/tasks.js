@@ -182,6 +182,14 @@ function syncReleasesByProject(user, project, callback) {
 
             // only get the full commit for new releases
             async.eachLimit(newReleases, 10, function (release, callback) {
+                // before initial successful sync and if notifications for this project are enabled, we mark the release as not notified yet
+                release.notified = !project.lastSuccessfulSyncAt ? true : !project.enabled;
+                release.body = '';
+                release.createdAt = 0;
+
+                // skip fetching details for notification which will not be sent
+                if (release.notified) return database.releases.add(release, callback);
+
                 api.getReleaseBody(user.githubToken, project, release.version, function (error, result) {
                     if (error) console.error(`Failed to get release body for ${project.name} ${release.version}. Falling back to commit message.`, error);
 
@@ -190,13 +198,9 @@ function syncReleasesByProject(user, project, callback) {
                     api.getCommit(user.githubToken, project, release.sha, function (error, commit) {
                         if (error) return callback(error);
 
-                        // before initial successful sync and if notifications for this project are enabled, we mark the release as not notified yet
-                        release.notified = !project.lastSuccessfulSyncAt ? true : !project.enabled;
                         release.createdAt = new Date(commit.createdAt).getTime();
                         // old code did not get all tags properly. this hack limits notifications to last 10 days
                         if (Date.now() - release.createdAt > 10 * 24 * 60 * 60 * 1000) release.notified = true;
-
-                        delete release.sha;
 
                         debug(`syncReleasesByProject: [${project.name}] add release ${release.version} notified ${release.notified}`);
 

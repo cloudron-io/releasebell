@@ -105,6 +105,9 @@ function projectsAdd(project, callback) {
     project.enabled = true;
     project.lastSuccessfulSyncAt = 0;
 
+    // don't store
+    delete release.sha;
+
     db.query('INSERT INTO projects SET ?', project, function (error) {
         if (error) return callback(error);
         callback(null, projectPostprocess(project));
