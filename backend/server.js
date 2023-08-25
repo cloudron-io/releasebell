@@ -34,7 +34,7 @@ function start(port, callback) {
         .use(express.json())
         .use(express.urlencoded({ extended: true }))
         .use(router)
-        .use(express.static('./frontend'))
+        .use(express.static('./dist'))
         .use(lastMile())
         .listen(port, callback);
 }

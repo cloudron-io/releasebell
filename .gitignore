@@ -1,5 +1,6 @@
 test/node_modules/
 node_modules/
+dist/
 .env
 database.json
 users.json

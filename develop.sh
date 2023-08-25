@@ -43,6 +43,9 @@ cat <<EOF > ./database.json
 }
 EOF
 
+echo "=> Build frontend"
+npm run build
+
 echo "=> Run database migrations"
 ./node_modules/.bin/db-migrate up
 
