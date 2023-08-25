@@ -8,7 +8,7 @@ CONTAINER_NAME="mysql-server-releasebell"
 OUT=`docker inspect ${CONTAINER_NAME}` || true
 if [[ "${OUT}" = "[]" ]]; then
     echo "=> Starting ${CONTAINER_NAME}..."
-    docker run --name ${CONTAINER_NAME} -e MYSQL_ROOT_PASSWORD=password -d mysql:5.6.34
+    docker run --name ${CONTAINER_NAME} -e MYSQL_ROOT_PASSWORD=password -d mysql:8.0
 else
     echo "=> ${CONTAINER_NAME} already running. If you want to start fresh, run 'docker rm --force ${CONTAINER_NAME}'"
 fi
@@ -19,6 +19,9 @@ echo "=> Waiting for mysql server to be ready..."
 while ! mysqladmin ping -h"${MYSQL_IP}" --silent; do
     sleep 1
 done
+
+echo "=> Configure mysql to allow password login"
+mysql -h"${MYSQL_IP}" -uroot -ppassword -e "ALTER USER 'root' IDENTIFIED WITH mysql_native_password BY 'password'; FLUSH PRIVILEGES;"
 
 echo "=> Ensure database"
 mysql -h"${MYSQL_IP}" -uroot -ppassword -e 'CREATE DATABASE IF NOT EXISTS releasebell'
