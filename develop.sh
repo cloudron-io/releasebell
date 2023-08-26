@@ -47,11 +47,15 @@ cat <<EOF > ./database.json
 }
 EOF
 
-echo "=> Build frontend"
-npm run build
+echo "=> Build and watch frontend in the background"
+npm run watch &
 
 echo "=> Run database migrations"
 ./node_modules/.bin/db-migrate up
+
+echo "============================"
+echo " Open http://localhost:3000 "
+echo "============================"
 
 echo "=> Start releasebell"
 ./index.js
