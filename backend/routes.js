@@ -48,7 +48,6 @@ function status(req, res, next) {
 function auth(req, res, next) {
     if (!req.oidc.isAuthenticated()) return next(new HttpError(401, 'Unauthorized'));
 
-    console.log('----', req.oidc.user)
     req.user = req.oidc.user;
 
     next();
