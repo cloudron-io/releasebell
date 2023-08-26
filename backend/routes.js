@@ -36,7 +36,7 @@ function login(req, res) {
     res.oidc.login({
         returnTo: '/',
         authorizationParams: {
-            redirect_uri: `${APP_ORIGIN}/api/v1/oidc/callback`,
+            redirect_uri: `${APP_ORIGIN}/api/v1/callback`,
         }
     });
 }

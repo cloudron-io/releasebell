@@ -22,7 +22,8 @@
       "loginRedirectUri": "/api/v1/callback"
     },
     "mysql": {},
-    "sendmail": {}
+    "sendmail": {},
+    "localstorage": {}
   },
   "mediaLinks": [
     "https://screenshots.cloudron.io/io.cloudron.releasebell/releasebell_1.png",

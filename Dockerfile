@@ -5,11 +5,13 @@ WORKDIR /app/code
 
 RUN ln -s /run/database.json /app/code/database.json
 
+ADD public /app/code/public
 ADD backend /app/code/backend
 ADD frontend /app/code/frontend
 ADD migrations /app/code/migrations
-ADD package.json index.js start.sh /app/code/
+ADD package-lock.json package.json index.html index.js start.sh vite.config.js /app/code/
 
-RUN npm install --production
+RUN npm install && npm run build && rm -rf node_modules
+RUN npm install --omit=dev
 
 CMD [ "/app/code/start.sh" ]

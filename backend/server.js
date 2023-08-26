@@ -69,6 +69,13 @@ function start(port, callback) {
             req.oidc = {
                 user: {
                     sub: 'admin',
+                    family_name: 'Cloudron',
+                    given_name: 'Admin',
+                    locale: 'en-US',
+                    name: 'Cloudron Admin',
+                    preferred_username: 'admin',
+                    email: 'admin@cloudron.local',
+                    email_verified: true
                 },
                 isAuthenticated() {
                     return true;

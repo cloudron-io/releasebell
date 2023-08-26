@@ -1,3 +1,4 @@
+
 <template>
   <div class="login-container" v-show="!busy && !user">
     <div class="login-logo"><img src="/favicon.png"/></div>
