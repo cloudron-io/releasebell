@@ -18,7 +18,9 @@
   "contactEmail": "support@cloudron.io",
   "icon": "logo.png",
   "addons": {
-    "ldap": {},
+    "oidc": {
+      "loginRedirectUri": "/api/v1/callback"
+    },
     "mysql": {},
     "sendmail": {}
   },

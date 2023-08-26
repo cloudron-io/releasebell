@@ -28,6 +28,10 @@ mysql -h"${MYSQL_IP}" -uroot -ppassword -e 'CREATE DATABASE IF NOT EXISTS releas
 
 export DEBUG="releasebell*"
 
+echo "=> Generating session secret"
+mkdir -p ./.dev
+dd if=/dev/urandom bs=256 count=1 2>/dev/null | base64 > ./.dev/session.secret
+
 echo "=> Create database.json"
 cat <<EOF > ./database.json
 {

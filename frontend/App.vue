@@ -2,7 +2,7 @@
   <div class="login-container" v-show="!busy && !user">
     <div class="login-logo"><img src="/favicon.png"/></div>
     <h1>Release Bell</h1>
-    <a href="/api/oidc/login"><Button id="loginButton" label="Login with Cloudron"/></a>
+    <a href="/api/v1/login"><Button id="loginButton" label="Login with Cloudron"/></a>
   </div>
 </template>
 
@@ -20,7 +20,7 @@ export default {
   },
   methods: {
     logout () {
-      window.location.href = '/api/oidc/logout';
+      window.location.href = '/api/v1/logout';
     }
   },
   mounted() {
@@ -40,4 +40,25 @@ export default {
 </script>
 
 <style scoped>
+
+.login-container {
+  max-width: 480px;
+  margin: auto;
+  padding: 20px;
+  text-align: center;
+  margin-top: 50px;
+  background-color: white;
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
+}
+
+.login-container img {
+  max-height: 128px;
+}
+
+.login-container h1 {
+  font-size: 30px;
+  font-weight: normal;
+}
+
 </style>
