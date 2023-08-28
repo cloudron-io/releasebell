@@ -178,11 +178,11 @@ async function usersGet(userId) {
     return result[0];
 }
 
-async function usersUpdate(userId, data) {
+async function usersUpdate(userId, githubToken) {
     assert.strictEqual(typeof userId, 'string');
-    assert.strictEqual(typeof data, 'object');
+    assert.strictEqual(typeof githubToken, 'string');
 
-    await db.query('UPDATE users SET email=?, githubToken=? WHERE id=?', [ data.email, data.githubToken, userId ]);
+    await db.query('UPDATE users SET githubToken=? WHERE id=?', [ githubToken, userId ]);
 }
 
 function usersRemove(userId) {

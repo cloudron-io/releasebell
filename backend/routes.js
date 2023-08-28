@@ -77,10 +77,9 @@ function profileUpdate(req, res, next) {
     github.verifyToken(githubToken, function (error) {
         if (error) return next(new HttpError(402, error.message));
 
-        database.users.update(req.user.id, { email: req.body.email, githubToken }, function (error) {
+        database.users.update(req.user.id, githubToken, function (error) {
             if (error) return next(new HttpError(500, error));
 
-            req.user.email = req.body.email;
             req.user.githubToken = githubToken;
 
             next(new HttpSuccess(202, {}));

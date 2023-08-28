@@ -30,10 +30,19 @@
 
       <!-- Settings Dialog -->
       <Dialog header="Settings" v-model:visible="settingsDialog.visible" :dismissableMask="true" :closable="true" :style="{width: '400px'}" :modal="true">
-        form here
+        <form @submit="onSettingsSubmit()" @submit.prevent>
+          <div>
+            <div class="form-field">
+              <label for="githubTokenInput">Github Token</label>
+              <InputText id="githubTokenInput" type="text" v-model="settingsDialog.githubToken" autofocus required :class="{ 'p-invalid': settingsDialog.error }"/>
+              <a href="https://github.com/settings/tokens/new?description=ReleaseBell" target="_blank">Generate a GitHub API token</a>
+              <small class="p-invalid" v-show="settingsDialog.error">{{ settingsDialog.error }}</small>
+            </div>
+          </div>
+        </form>
         <template #footer>
           <Button label="Cancel" icon="pi pi-times" class="p-button-text" @click="settingsDialog.visible = false"/>
-          <Button label="Save" :icon="settingsDialog.busy ? 'pi pi-spin pi-spinner' : 'pi pi-check'" :disabled="!settingsDialog.data.address || settingsDialog.busy" class="p-button-text p-button-success" @click="onSettingsSubmit()"/>
+          <Button label="Save" :icon="settingsDialog.busy ? 'pi pi-spin pi-spinner' : 'pi pi-check'" :disabled="!settingsDialog.githubToken || settingsDialog.busy" class="p-button-text p-button-success" @click="onSettingsSubmit()"/>
         </template>
       </Dialog>
     </template>
@@ -183,6 +192,7 @@ export default {
       this.addProjectDialog.visible = true;
     },
     onShowSettingsDialog() {
+      this.settingsDialog.githubToken = this.user.githubToken;
       this.settingsDialog.visible = true;
     },
     async onAddProjectSubmit() {
@@ -208,7 +218,26 @@ export default {
       await this.refresh();
     },
     async onSettingsSubmit() {
+      this.settingsDialog.busy = true;
+      try {
+        await superagent.post(`${API_ORIGIN}/api/v1/profile`).send({ githubToken: this.settingsDialog.githubToken });
+      } catch (error) {
+        if (error.status === 402) {
+          document.getElementById(githubTokenInput).focus();
+          console.log(error)
 
+          if (error.response.body) that.onError(error.response.body);
+          else that.onError('Invalid GitHub token provided');
+        } else {
+          console.error('Unexpected error saving profile', error);
+        }
+
+        this.settingsDialog.busy = false;
+        return;
+      }
+
+      this.settingsDialog.busy = false;
+      this.settingsDialog.visible = false;
     }
   },
   async mounted() {
