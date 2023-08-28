@@ -35,3 +35,11 @@ a:hover {
   height: 100%;
   overflow: hidden;
 }
+
+.p-button-label {
+  white-space: nowrap;
+}
+
+.hand {
+  cursor: pointer;
+}

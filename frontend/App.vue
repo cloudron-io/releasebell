@@ -8,7 +8,7 @@
   <MainLayout v-show="!busy && user">
     <template #dialogs>
       <!-- Add Project Dialog -->
-      <Dialog header="Add Project" v-model:visible="addProjectDialog.visible" :dismissableMask="true" :closable="true" :style="{width: '400px'}" :modal="true">
+      <Dialog header="Add Project" v-model:visible="addProjectDialog.visible" :dismissableMask="true" :closable="true" :style="{ maxWidth: '100%', width: '1028px'}" :modal="true">
         <form @submit="onAddProjectSubmit()" @submit.prevent>
           <div>
             <div class="form-field">
@@ -29,7 +29,7 @@
       </Dialog>
 
       <!-- Settings Dialog -->
-      <Dialog header="Settings" v-model:visible="settingsDialog.visible" :dismissableMask="true" :closable="true" :style="{width: '400px'}" :modal="true">
+      <Dialog header="Settings" v-model:visible="settingsDialog.visible" :dismissableMask="true" :closable="true" :modal="true">
         <form @submit="onSettingsSubmit()" @submit.prevent>
           <div>
             <div class="form-field">
@@ -278,21 +278,6 @@ export default {
 .login-container h1 {
   font-size: 30px;
   font-weight: normal;
-}
-
-.hand {
-  cursor: pointer;
-}
-
-.active:before {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  display: block;
-  margin-bottom: 2px;
-  content: "";
-  border-bottom: 2px solid var(--primary-color);
 }
 
 .form-field {
