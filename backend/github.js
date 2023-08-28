@@ -30,7 +30,7 @@ function buildOctokit(token) {
             },
         },
         retry: {
-            doNotRetry: ["429"],
+            doNotRetry: ['429'],
         },
     });
 

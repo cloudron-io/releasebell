@@ -40,7 +40,7 @@ function start(port, callback) {
     // currently for local development. vite runs on http://localhost:5173
     app.use(cors({ origins: [ '*' ], allowCredentials: true }));
 
-    app.use(connectTimeout(10000, { respond: true }));
+    app.use(connectTimeout(20000, { respond: true }));
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
     if (process.env.CLOUDRON_OIDC_ISSUER) {

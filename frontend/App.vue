@@ -29,14 +29,16 @@
       </Dialog>
 
       <!-- Settings Dialog -->
-      <Dialog header="Settings" v-model:visible="settingsDialog.visible" :dismissableMask="true" :closable="true" :modal="true">
+      <Dialog header="Settings" v-model:visible="settingsDialog.visible" :dismissableMask="true" :closable="true" :style="{ maxWidth: '100%', width: '728px'}" :modal="true">
         <form @submit="onSettingsSubmit()" @submit.prevent>
           <div>
             <div class="form-field">
               <label for="githubTokenInput">Github Token</label>
               <InputText id="githubTokenInput" type="text" v-model="settingsDialog.githubToken" autofocus required :class="{ 'p-invalid': settingsDialog.error }"/>
-              <a href="https://github.com/settings/tokens/new?description=ReleaseBell" target="_blank">Generate a GitHub API token</a>
-              <small class="p-invalid" v-show="settingsDialog.error">{{ settingsDialog.error }}</small>
+              <small class="text-error" v-show="settingsDialog.error">{{ settingsDialog.error }}</small>
+              <br/>
+              <br/>
+              <a href="https://github.com/settings/tokens/new?description=ReleaseBell" target="_blank" style="margin-top: 10px;">Generate a GitHub API token</a>
             </div>
           </div>
         </form>
@@ -149,6 +151,7 @@ export default {
       settingsDialog: {
         visible: false,
         busy: false,
+        error: '',
         data: {}
       },
     };
@@ -193,6 +196,7 @@ export default {
     },
     onShowSettingsDialog() {
       this.settingsDialog.githubToken = this.user.githubToken;
+      this.settingsDialog.error = '';
       this.settingsDialog.visible = true;
     },
     async onAddProjectSubmit() {
@@ -219,15 +223,14 @@ export default {
     },
     async onSettingsSubmit() {
       this.settingsDialog.busy = true;
+      this.settingsDialog.error = '';
+
       try {
         await superagent.post(`${API_ORIGIN}/api/v1/profile`).send({ githubToken: this.settingsDialog.githubToken });
       } catch (error) {
         if (error.status === 402) {
-          document.getElementById(githubTokenInput).focus();
-          console.log(error)
-
-          if (error.response.body) that.onError(error.response.body);
-          else that.onError('Invalid GitHub token provided');
+          document.getElementById('githubTokenInput').focus();
+          this.settingsDialog.error = 'Invalid GitHub token provided';
         } else {
           console.error('Unexpected error saving profile', error);
         }

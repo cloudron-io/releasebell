@@ -43,3 +43,7 @@ a:hover {
 .hand {
   cursor: pointer;
 }
+
+.text-error {
+  color: var(--red-500);
+}
