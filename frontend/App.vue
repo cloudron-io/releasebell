@@ -74,7 +74,11 @@
               <a :href="slotProps.data.origin + '/' + slotProps.data.name + '/-/tags/' + slotProps.data.version" target="_blank" v-show="slotProps.data.type === 'gitlab'">{{ slotProps.data.version }}</a>
             </template>
           </Column>
-          <Column field="createdAt" header="Released At" sortable></Column>
+          <Column field="createdAt" header="Released At" sortable>
+            <template #body="slotProps">
+              {{ prettyDate(slotProps.data.createdAt) }}
+            </template>
+          </Column>
           <Column>
             <template #body="slotProps">
 
@@ -141,6 +145,27 @@ export default {
     };
   },
   methods: {
+    prettyDate: function (value) {
+      if (!value) return '';
+
+      var date = new Date(value),
+      diff = (((new Date()).getTime() - date.getTime()) / 1000),
+      day_diff = Math.floor(diff / 86400);
+
+      if (isNaN(day_diff) || day_diff < 0) return;
+
+      return day_diff === 0 && (
+        diff < 60 && 'just now' ||
+        diff < 120 && '1 minute ago' ||
+        diff < 3600 && Math.floor( diff / 60 ) + ' minutes ago' ||
+        diff < 7200 && '1 hour ago' ||
+        diff < 86400 && Math.floor( diff / 3600 ) + ' hours ago') ||
+        day_diff === 1 && 'Yesterday' ||
+        day_diff < 7 && day_diff + ' days ago' ||
+        day_diff < 31 && Math.ceil( day_diff / 7 ) + ' weeks ago' ||
+        day_diff < 365 && Math.round( day_diff / 30 ) +  ' months ago' ||
+        Math.round( day_diff / 365 ) + ' years ago';
+    },
     async onLogout() {
       await superagent.get(`${API_ORIGIN}/api/v1/logout?return_to=${location.origin}`);
       this.user = null;
@@ -151,7 +176,6 @@ export default {
       // if (result.statusCode !== 200) return that.onError('Unexpected response: ' + result.statusCode + ' ' + result.text);
 
       this.projects = result.body.projects;
-      console.log(this.projects)
     },
     onShowAddProjectDialog() {
       this.addProjectDialog.url = '';
