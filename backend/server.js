@@ -2,9 +2,9 @@
 
 var assert = require('assert'),
     connectTimeout = require('connect-timeout'),
+    cors = require('./cors.js'),
     lastMile = require('connect-lastmile'),
     oidc = require('express-openid-connect'),
-    HttpSuccess = lastMile.HttpSuccess,
     path = require('path'),
     fs = require('fs'),
     routes = require('./routes.js'),
@@ -37,6 +37,9 @@ function start(port, callback) {
 
     app.set('trust proxy', 1);
 
+    // currently for local development. vite runs on http://localhost:5173
+    app.use(cors({ origins: [ '*' ], allowCredentials: true }));
+
     app.use(connectTimeout(10000, { respond: true }));
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
@@ -60,9 +63,12 @@ function start(port, callback) {
         }));
     } else {
         // mock oidc
+        let loginSession = false;
+
         app.use((req, res, next) => {
             res.oidc = {
                 login(options) {
+                    loginSession = true;
                     res.redirect(options.authorizationParams.redirect_uri);
                 }
             };
@@ -78,15 +84,20 @@ function start(port, callback) {
                     email_verified: true
                 },
                 isAuthenticated() {
-                    return true;
+                    return loginSession;
                 }
-            }
+            };
 
             next();
         });
 
         app.use('/api/v1/callback', (req, res) => {
-            res.redirect(req.query.returnTo || '/');
+            res.redirect(`http://localhost:${process.env.VITE_DEV_PORT || process.env.PORT}/`);
+        });
+
+        app.use('/api/v1/logout', (req, res) => {
+            loginSession = false;
+            res.status(200).send({});
         });
     }
     app.use(router);

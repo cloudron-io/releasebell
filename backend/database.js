@@ -157,51 +157,36 @@ function projectsRemoveAll(userId, callback) {
     });
 }
 
-function usersList(callback) {
-    assert.strictEqual(typeof callback, 'function');
-
-    db.query('SELECT * FROM users', [], function (error, result) {
-        if (error) return callback(error);
-        callback(null, result);
-    });
+async function usersList() {
+    return await db.query('SELECT * FROM users', []);
 }
 
-function usersAdd(user, callback) {
+async function usersAdd(user) {
     assert.strictEqual(typeof user, 'object');
-    assert.strictEqual(typeof callback, 'function');
 
-    db.query('INSERT INTO users SET ?', user, function (error) {
-        if (error) return callback(error);
-        callback(null, user);
-    });
+    await db.query('INSERT INTO users SET ?', user);
+
+    return user;
 }
 
-function usersGet(userId, callback) {
+async function usersGet(userId) {
     assert.strictEqual(typeof userId, 'string');
-    assert.strictEqual(typeof callback, 'function');
 
-    db.query('SELECT * FROM users WHERE id=?', [ userId ], function (error, result) {
-        if (error) return callback(error);
-        callback(null, result[0]);
-    });
+    const result = await db.query('SELECT * FROM users WHERE id=?', [ userId ]);
+    if (!result.length) throw new Error('no such user');
+
+    return result[0];
 }
 
-function usersUpdate(userId, data, callback) {
+async function usersUpdate(userId, data) {
     assert.strictEqual(typeof userId, 'string');
     assert.strictEqual(typeof data, 'object');
-    assert.strictEqual(typeof callback, 'function');
 
-    db.query('UPDATE users SET email=?, githubToken=? WHERE id=?', [ data.email, data.githubToken, userId ], function (error, result) {
-        if (error) return callback(error);
-        callback(null);
-    });
+    await db.query('UPDATE users SET email=?, githubToken=? WHERE id=?', [ data.email, data.githubToken, userId ]);
 }
 
-function usersRemove(userId, callback) {
+function usersRemove(userId) {
     assert.strictEqual(typeof userId, 'string');
-    assert.strictEqual(typeof callback, 'function');
-
-    callback();
 }
 
 function releasesList(projectId, callback) {

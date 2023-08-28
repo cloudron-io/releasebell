@@ -1,8 +1,6 @@
 'use strict';
 
 var assert = require('assert'),
-    path = require('path'),
-    fs = require('fs'),
     database = require('./database.js'),
     github = require('./github.js'),
     tasks = require('./tasks.js'),
@@ -45,10 +43,22 @@ function status(req, res, next) {
     next(new HttpSuccess(200, {}));
 }
 
-function auth(req, res, next) {
+async function auth(req, res, next) {
     if (!req.oidc.isAuthenticated()) return next(new HttpError(401, 'Unauthorized'));
 
-    req.user = req.oidc.user;
+    let user;
+    try {
+        user = await database.users.get(req.oidc.user.sub);
+    } catch (e) {
+        try {
+            user = await database.users.add({ id: req.oidc.user.sub, email: req.oidc.user.email, githubToken: '' });
+        } catch (e) {
+            console.error('Failed to add user', req.user.oidc.user, e);
+            return next(new HttpError(500, 'internal error'));
+        }
+    }
+
+    req.user = user;
 
     next();
 }

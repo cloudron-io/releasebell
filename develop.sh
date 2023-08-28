@@ -47,15 +47,13 @@ cat <<EOF > ./database.json
 }
 EOF
 
-echo "=> Build and watch frontend in the background"
-npm run watch &
-
 echo "=> Run database migrations"
 ./node_modules/.bin/db-migrate up
 
-echo "============================"
-echo " Open http://localhost:3000 "
-echo "============================"
+echo "========================================================"
+echo "If running the vite dev server as below in a second terminal on the side for live-reload, set VITE_DEV_PORT to the port vite runs on."
+echo "VITE_API_ORIGIN=http://localhost:3000 npm run dev"
+echo "========================================================"
 
 echo "=> Start releasebell"
 ./index.js

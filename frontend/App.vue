@@ -3,38 +3,203 @@
   <div class="login-container" v-show="!busy && !user">
     <div class="login-logo"><img src="/favicon.png"/></div>
     <h1>Release Bell</h1>
-    <a href="/api/v1/login"><Button id="loginButton" label="Login with Cloudron"/></a>
+    <a :href="loginUrl"><Button id="loginButton" label="Login with Cloudron"/></a>
   </div>
+  <MainLayout v-show="!busy && user">
+    <template #dialogs>
+      <!-- Add Project Dialog -->
+      <Dialog header="Add Project" v-model:visible="addProjectDialog.visible" :dismissableMask="true" :closable="true" :style="{width: '400px'}" :modal="true">
+        <form @submit="onAddProjectSubmit()" @submit.prevent>
+          <div>
+            <div class="form-field">
+              <label for="addProjectTypeInput">Type</label>
+              <Dropdown v-model="addProjectDialog.type" :options="projectTypes" optionLabel="name" inputId="addProjectTypeInput"/>
+            </div>
+            <div class="form-field">
+              <label for="addProjectUrlInput">URL</label>
+              <InputText id="addProjectUrlInput" type="text" v-model="addProjectDialog.url" autofocus required :class="{ 'p-invalid': addProjectDialog.error }"/>
+              <small class="p-invalid" v-show="addProjectDialog.error">{{ addProjectDialog.error }}</small>
+            </div>
+          </div>
+        </form>
+        <template #footer>
+          <Button label="Cancel" icon="pi pi-times" class="p-button-text" @click="addProjectDialog.visible = false"/>
+          <Button label="Add" id="addProjectSubmitButton" :icon="addProjectDialog.busy ? 'pi pi-spin pi-spinner' : 'pi pi-check'" :disabled="!addProjectDialog.url || addProjectDialog.busy" class="p-button-text p-button-success" @click="onAddProjectSubmit()"/>
+        </template>
+      </Dialog>
+
+      <!-- Settings Dialog -->
+      <Dialog header="Settings" v-model:visible="settingsDialog.visible" :dismissableMask="true" :closable="true" :style="{width: '400px'}" :modal="true">
+        form here
+        <template #footer>
+          <Button label="Cancel" icon="pi pi-times" class="p-button-text" @click="settingsDialog.visible = false"/>
+          <Button label="Save" :icon="settingsDialog.busy ? 'pi pi-spin pi-spinner' : 'pi pi-check'" :disabled="!settingsDialog.data.address || settingsDialog.busy" class="p-button-text p-button-success" @click="onSettingsSubmit()"/>
+        </template>
+      </Dialog>
+    </template>
+    <template #header>
+      <TopBar class="navbar">
+        <template #left>
+          <img src="/favicon.png" style="height: 24px; margin-right: 10px"/> Release Bell
+        </template>
+        <template #right>
+          <Button class="p-button-sm" style="margin-right: 10px" severity="primary" icon="pi pi-plus" label="Add Project" @click="onShowAddProjectDialog()"/>
+          <Button class="p-button-sm" style="margin-right: 10px" severity="primary" icon="pi pi-cog" label="Settings" @click="onShowSettingsDialog()"/>
+          <Button class="p-button-sm" severity="secondary" icon="pi pi-sign-out" label="Logout" @click="onLogout()"/>
+        </template>
+      </TopBar>
+    </template>
+    <template #body>
+      <div class="main-view">
+        <div style="text-align: center;" v-show="projects.length === 0">
+          <img src="/favicon.png" style="width: 64px;"/>
+          <h1>Welcome to Release Bell</h1>
+          <p>Set a GitHub token in your <a href="" @click.prevent="onShowSettingsDialog()">profile</a> to start receiving new release notifcations for your starred repos or add <a href="" @click.prevent="onShowAddProjectDialog()">GitLab project URLs</a> for release notifications for those projects.</p>
+        </div>
+        <DataTable :value="projects" stripedRows v-show="projects.length !== 0" class="p-datatable-sm">
+          <Column field="name" header="Name" sortable>
+            <template #body="slotProps">
+              <a :href="'https://github.com/' + slotProps.data.name" target="_blank" v-show="slotProps.data.type === 'github' || slotProps.data.type === 'github_manual'">{{ slotProps.data.name }}</a>
+              <a :href="slotProps.data.origin + '/' + slotProps.data.name" target="_blank" v-show="slotProps.data.type === 'gitlab'">{{ slotProps.data.name }}</a>
+            </template>
+          </Column>
+          <Column field="type" header="Type" sortable>
+            <template #body="slotProps">
+              <img :src="'/' + slotProps.data.type + '.svg'" class="type-icon"/> {{ slotProps.data.type }}
+            </template>
+          </Column>
+          <Column field="version" header="Last Version" sortable>
+            <template #body="slotProps">
+              <a :href="'https://github.com/' + slotProps.data.name + '/releases/tag/' + slotProps.data.version" target="_blank" v-show="slotProps.data.type === 'github' || slotProps.data.type === 'github_manual'">{{ slotProps.data.version }}</a>
+              <a :href="slotProps.data.origin + '/' + slotProps.data.name + '/-/tags/' + slotProps.data.version" target="_blank" v-show="slotProps.data.type === 'gitlab'">{{ slotProps.data.version }}</a>
+            </template>
+          </Column>
+          <Column field="createdAt" header="Released At" sortable></Column>
+          <Column>
+            <template #body="slotProps">
+
+            </template>
+          </Column>
+        </DataTable>
+      </div>
+    </template>
+    <template #footer>
+      <BottomBar>
+        <div>Built by the <a href="https://cloudron.io" target="_blank">Cloudron</a> team</div>
+      </BottomBar>
+    </template>
+  </MainLayout>
 </template>
 
 <script>
 
 import superagent from 'superagent';
 
+import Button from 'primevue/button';
+import Dropdown from 'primevue/dropdown';
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
+
+import { BottomBar, MainLayout, TopBar } from 'pankow';
+
+const API_ORIGIN = import.meta.env.VITE_API_ORIGIN || '';
+
 export default {
   name: 'App',
+  components: {
+    BottomBar,
+    Button,
+    Column,
+    DataTable,
+    Dropdown,
+    MainLayout,
+    TopBar
+  },
   data() {
     return {
       busy: true,
-      user: null
+      user: null,
+      projects: [],
+      loginUrl: `${API_ORIGIN}/api/v1/login?returnTo=${location.origin}`,
+      projectTypes: [{
+        type: 'github_manual',
+        name: 'Github'
+      }, {
+        type: 'gitlab',
+        name: 'GitLab'
+      }],
+      addProjectDialog: {
+        visible: false,
+        busy: false,
+        url: '',
+      },
+      settingsDialog: {
+        visible: false,
+        busy: false,
+        data: {}
+      },
     };
   },
   methods: {
-    logout () {
-      window.location.href = '/api/v1/logout';
+    async onLogout() {
+      await superagent.get(`${API_ORIGIN}/api/v1/logout?return_to=${location.origin}`);
+      this.user = null;
+    },
+    async refresh() {
+      const result = await superagent.get(`${API_ORIGIN}/api/v1/projects`);
+      // if (error) return that.onError(error);
+      // if (result.statusCode !== 200) return that.onError('Unexpected response: ' + result.statusCode + ' ' + result.text);
+
+      this.projects = result.body.projects;
+      console.log(this.projects)
+    },
+    onShowAddProjectDialog() {
+      this.addProjectDialog.url = '';
+      this.addProjectDialog.type = this.projectTypes[0];
+      this.addProjectDialog.visible = true;
+    },
+    onShowSettingsDialog() {
+      this.settingsDialog.visible = true;
+    },
+    async onAddProjectSubmit() {
+      // https://codeberg.org/teddit/teddit
+      const url = new URL(this.addProjectDialog.url);
+
+      const components = url.pathname.split('/');
+      if (components.length < 3) return console.error('Invalid gitlab/github url');
+
+      const data = {
+        type: this.addProjectDialog.type.type,
+        name: components[1] + '/' + components[2],
+        origin: url.origin
+      };
+
+      this.addProjectDialog.busy = true;
+      await superagent.post(`${API_ORIGIN}/api/v1/projects/`).send(data);
+      this.addProjectDialog.visible = false;
+      this.addProjectDialog.busy = false;
+
+      // if (error) return that.onError(error);
+      // if (result.statusCode !== 201) return that.onError('Unexpected response: ' + result.statusCode + ' ' + result.text);
+      await this.refresh();
+    },
+    async onSettingsSubmit() {
+
     }
   },
-  mounted() {
+  async mounted() {
     this.busy = true;
 
-    superagent.get('/api/v1/profile').end((error, result) => {
-      this.busy = false;
-
-      if (result && result.statusCode === 401) return;
-      if (error) return console.error(error);
-
+    try {
+      const result = await superagent.get(`${API_ORIGIN}/api/v1/profile`);
       this.user = result.body.user;
-    });
+
+      await this.refresh();
+    } catch (e) {
+      if (e.status !== 401) console.error(e);
+    }
+
+    this.busy = false;
   }
 };
 
@@ -60,6 +225,42 @@ export default {
 .login-container h1 {
   font-size: 30px;
   font-weight: normal;
+}
+
+.hand {
+  cursor: pointer;
+}
+
+.active:before {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: block;
+  margin-bottom: 2px;
+  content: "";
+  border-bottom: 2px solid var(--primary-color);
+}
+
+.form-field {
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.form-field > label {
+  display: block;
+  margin-bottom: 10px;
+}
+
+.form-field > * {
+  width: 100%;
+}
+
+.type-icon {
+  height: 24px;
+  vertical-align: middle;
+  padding-right: 10px;
+  filter: grayscale(0.5);
 }
 
 </style>
