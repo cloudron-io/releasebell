@@ -56,7 +56,7 @@
           <h1>Welcome to Release Bell</h1>
           <p>Set a GitHub token in your <a href="" @click.prevent="onShowSettingsDialog()">profile</a> to start receiving new release notifcations for your starred repos or add <a href="" @click.prevent="onShowAddProjectDialog()">GitLab project URLs</a> for release notifications for those projects.</p>
         </div>
-        <DataTable :value="projects" stripedRows v-show="projects.length !== 0" class="p-datatable-sm">
+        <DataTable :value="projects" stripedRows style="max-width: 1280px; margin: auto" tableStyle="min-width: 50rem" v-show="projects.length !== 0" class="p-datatable-sm">
           <Column field="name" header="Name" sortable>
             <template #body="slotProps">
               <a :href="'https://github.com/' + slotProps.data.name" target="_blank" v-show="slotProps.data.type === 'github' || slotProps.data.type === 'github_manual'">{{ slotProps.data.name }}</a>
