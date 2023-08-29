@@ -74,19 +74,20 @@ function profileUpdate(req, res, next) {
 
     const githubToken = req.body.githubToken || '';
 
-    github.verifyToken(githubToken, function (error) {
+    github.verifyToken(githubToken, async function (error) {
         if (error) return next(new HttpError(402, error.message));
 
-        database.users.update(req.user.id, githubToken, function (error) {
-            if (error) return next(new HttpError(500, error));
+        try {
+            await database.users.update(req.user.id, githubToken);
+        } catch (error) {
+            return next(new HttpError(500, error));
+        }
+        req.user.githubToken = githubToken;
 
-            req.user.githubToken = githubToken;
+        next(new HttpSuccess(202, {}));
 
-            next(new HttpSuccess(202, {}));
-
-            // kick off a round of syncing for the new github token
-            if (githubToken) tasks.run();
-        });
+        // kick off a round of syncing for the new github token
+        if (githubToken) tasks.run();
     });
 }
 

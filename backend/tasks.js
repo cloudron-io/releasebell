@@ -80,23 +80,26 @@ function run() {
     });
 }
 
-function syncProjects(callback) {
+async function syncProjects(callback) {
     assert.strictEqual(typeof callback, 'function');
 
-    database.users.list(function (error, result) {
-        if (error) return callback(error);
+    let list;
+    try {
+        list = await database.users.list();
+    } catch (error) {
+        return callback(error);
+    }
 
-        shuffleArray(result);
+    shuffleArray(list);
 
-        async.each(result, function (user, callback) {
-            // errors are ignored here
-            syncGithubStarredByUser(user, function (error) {
-                if (error) console.error(error);
+    async.each(list, function (user, callback) {
+        // errors are ignored here
+        syncGithubStarredByUser(user, function (error) {
+            if (error) console.error(error);
 
-                callback();
-            });
-        }, callback);
-    });
+            callback();
+        });
+    }, callback);
 }
 
 function syncGithubStarredByUser(user, callback) {
@@ -241,24 +244,27 @@ function syncReleasesByUser(user, callback) {
     });
 }
 
-function syncReleases(callback) {
+async function syncReleases(callback) {
     assert.strictEqual(typeof callback, 'function');
 
-    database.users.list(function (error, result) {
-        if (error) return callback(error);
+    let list;
+    try {
+        list = await database.users.list();
+    } catch (error) {
+        return callback(error);
+    }
 
-        shuffleArray(result);
+    shuffleArray(list);
 
-        async.eachSeries(result, function (user, callback) {
-            syncReleasesByUser(user, function (error) {
-                if (error) console.error(error);
-                if (error && error.retryAt) gRetryAt = error.retryAt;
+    async.eachSeries(list, function (user, callback) {
+        syncReleasesByUser(user, function (error) {
+            if (error) console.error(error);
+            if (error && error.retryAt) gRetryAt = error.retryAt;
 
-                // errors are ignored here
-                callback();
-            });
-        }, callback);
-    });
+            // errors are ignored here
+            callback();
+        });
+    }, callback);
 }
 
 function sendNotificationEmail(release, callback) {
@@ -273,39 +279,42 @@ function sendNotificationEmail(release, callback) {
     database.projects.get(release.projectId, function (error, project) {
         if (error) return callback(error);
 
-        database.users.get(project.userId, function (error, user) {
+        let user;
+        try {
+            user = database.users.get(project.userId);
+        } catch (error) {
+            return callback(error);
+        }
+
+        var transport = nodemailer.createTransport(smtpTransport({
+            host: process.env.CLOUDRON_MAIL_SMTP_SERVER,
+            port: process.env.CLOUDRON_MAIL_SMTP_PORT,
+            auth: {
+                user: process.env.CLOUDRON_MAIL_SMTP_USERNAME,
+                pass: process.env.CLOUDRON_MAIL_SMTP_PASSWORD
+            }
+        }));
+
+        let versionLink;
+        if (project.type === database.PROJECT_TYPE_GITHUB) {
+            versionLink = `https://github.com/${project.name}/releases/tag/${release.version}`;
+        } else if (project.type === database.PROJECT_TYPE_GITLAB) {
+            versionLink = `${project.origin}/${project.name}/-/tags/${release.version}`;
+        }
+        const settingsLink = process.env.CLOUDRON_APP_ORIGIN || '';
+
+        var mail = {
+            from: `ReleaseBell <${process.env.CLOUDRON_MAIL_FROM}>`,
+            to: user.email,
+            subject: `${project.name} ${release.version} released`,
+            text: `A new release at ${project.name} with version ${release.version} was published. ${release.body}. Read more about this release at ${versionLink}`,
+            html: EMAIL_TEMPLATE({ project: project, release: release, versionLink: versionLink, settingsLink: settingsLink })
+        };
+
+        transport.sendMail(mail, function (error) {
             if (error) return callback(error);
 
-            var transport = nodemailer.createTransport(smtpTransport({
-                host: process.env.CLOUDRON_MAIL_SMTP_SERVER,
-                port: process.env.CLOUDRON_MAIL_SMTP_PORT,
-                auth: {
-                    user: process.env.CLOUDRON_MAIL_SMTP_USERNAME,
-                    pass: process.env.CLOUDRON_MAIL_SMTP_PASSWORD
-                }
-            }));
-
-            let versionLink;
-            if (project.type === database.PROJECT_TYPE_GITHUB) {
-                versionLink = `https://github.com/${project.name}/releases/tag/${release.version}`;
-            } else if (project.type === database.PROJECT_TYPE_GITLAB) {
-                versionLink = `${project.origin}/${project.name}/-/tags/${release.version}`;
-            }
-            const settingsLink = process.env.CLOUDRON_APP_ORIGIN || '';
-
-            var mail = {
-                from: `ReleaseBell <${process.env.CLOUDRON_MAIL_FROM}>`,
-                to: user.email,
-                subject: `${project.name} ${release.version} released`,
-                text: `A new release at ${project.name} with version ${release.version} was published. ${release.body}. Read more about this release at ${versionLink}`,
-                html: EMAIL_TEMPLATE({ project: project, release: release, versionLink: versionLink, settingsLink: settingsLink })
-            };
-
-            transport.sendMail(mail, function (error) {
-                if (error) return callback(error);
-
-                database.releases.update(release.id, { notified: true }, callback);
-            });
+            database.releases.update(release.id, { notified: true }, callback);
         });
     });
 }
