@@ -18,12 +18,6 @@ function buildOctokit(token) {
     const octokit = new CustomOctokit({
         auth: token,
         userAgent: 'releasebell@cloudron',
-        log: {
-            debug: console.log,
-            info: console.log,
-            warn: console.warn,
-            error: console.error
-        },
         throttle: {
             onRateLimit: (retryAfter, options) => {
                 console.log(`Request quota exhausted for request ${options.method} ${options.url}`);
