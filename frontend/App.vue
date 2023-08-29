@@ -98,11 +98,6 @@
         </DataTable>
       </div>
     </template>
-    <template #footer>
-      <BottomBar>
-        <div>Built by the <a href="https://cloudron.io" target="_blank">Cloudron</a> team</div>
-      </BottomBar>
-    </template>
   </MainLayout>
 </template>
 
