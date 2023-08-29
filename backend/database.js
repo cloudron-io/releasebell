@@ -2,7 +2,7 @@
 
 var assert = require('assert'),
     uuid = require('uuid'),
-    mysql = require('mysql');
+    mysql = require('mysql2');
 
 module.exports = exports = {
     init: init,
@@ -16,8 +16,7 @@ module.exports = exports = {
         list: usersList,
         add: usersAdd,
         get: usersGet,
-        update: usersUpdate,
-        remove: usersRemove
+        update: usersUpdate
     },
 
     projects: {
@@ -40,6 +39,7 @@ module.exports = exports = {
 };
 
 var db = null;
+var dbPromise;
 
 function init(callback) {
     assert.strictEqual(typeof callback, 'function');
@@ -52,14 +52,15 @@ function init(callback) {
 
     db = mysql.createPool({
         connectionLimit: 10,
+        waitForConnections: true,
         host: config[config.defaultEnv].host,
         port: config[config.defaultEnv].port,
         user: config[config.defaultEnv].user,
         password: config[config.defaultEnv].password,
-        database: config[config.defaultEnv].database,
-        dateStrings: true,
-        charset: 'utf8mb4'
+        database: config[config.defaultEnv].database
     });
+
+    dbPromise = db.promise();
 
     callback();
 }
@@ -158,13 +159,14 @@ function projectsRemoveAll(userId, callback) {
 }
 
 async function usersList() {
-    return await db.query('SELECT * FROM users', []).values;
+    const [result] = await dbPromise.query('SELECT * FROM users', []);
+    return result;
 }
 
 async function usersAdd(user) {
     assert.strictEqual(typeof user, 'object');
 
-    await db.query('INSERT INTO users SET ?', user);
+    await dbPromise.query('INSERT INTO users SET ?', user);
 
     return user;
 }
@@ -172,21 +174,17 @@ async function usersAdd(user) {
 async function usersGet(userId) {
     assert.strictEqual(typeof userId, 'string');
 
-    const result = await db.query('SELECT * FROM users WHERE id=?', [ userId ]);
+    const [result] = await dbPromise.query('SELECT * FROM users WHERE id=?', [ userId ]);
     if (!result.length) throw new Error('no such user');
 
-    return result.values[0];
+    return result[0];
 }
 
 async function usersUpdate(userId, githubToken) {
     assert.strictEqual(typeof userId, 'string');
     assert.strictEqual(typeof githubToken, 'string');
 
-    await db.query('UPDATE users SET githubToken=? WHERE id=?', [ githubToken, userId ]);
-}
-
-function usersRemove(userId) {
-    assert.strictEqual(typeof userId, 'string');
+    await dbPromise.query('UPDATE users SET githubToken=? WHERE id=?', [ githubToken, userId ]);
 }
 
 function releasesList(projectId, callback) {

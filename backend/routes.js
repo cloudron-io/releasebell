@@ -47,8 +47,10 @@ async function auth(req, res, next) {
     if (!req.oidc.isAuthenticated()) return next(new HttpError(401, 'Unauthorized'));
 
     let user;
+    console.log(req.oidc.user)
     try {
         user = await database.users.get(req.oidc.user.sub);
+        console.log('user already known')
     } catch (e) {
         try {
             user = await database.users.add({ id: req.oidc.user.sub, email: req.oidc.user.email, githubToken: '' });
@@ -59,6 +61,8 @@ async function auth(req, res, next) {
     }
 
     req.user = user;
+
+    console.log('---', user)
 
     next();
 }

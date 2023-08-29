@@ -25,7 +25,7 @@
     "express-openid-connect": "^2.16.0",
     "handlebars": "^4.7.8",
     "helper-markdown": "^1.0.0",
-    "mysql": "^2.18.1",
+    "mysql2": "^3.6.0",
     "nodemailer": "^6.9.4",
     "nodemailer-smtp-transport": "^2.7.4",
     "superagent": "^8.1.2",
