@@ -47,10 +47,8 @@ async function auth(req, res, next) {
     if (!req.oidc.isAuthenticated()) return next(new HttpError(401, 'Unauthorized'));
 
     let user;
-    console.log(req.oidc.user)
     try {
         user = await database.users.get(req.oidc.user.sub);
-        console.log('user already known')
     } catch (e) {
         try {
             user = await database.users.add({ id: req.oidc.user.sub, email: req.oidc.user.email, githubToken: '' });
@@ -61,8 +59,6 @@ async function auth(req, res, next) {
     }
 
     req.user = user;
-
-    console.log('---', user)
 
     next();
 }
@@ -95,17 +91,20 @@ function profileUpdate(req, res, next) {
     });
 }
 
-function projectsList(req, res, next) {
+async function projectsList(req, res, next) {
     assert.strictEqual(typeof req.user, 'object');
 
-    database.projects.list(req.user.id, function (error, result) {
-        if (error) return next(new HttpError(500, error));
+    let result;
+    try {
+        result = await database.projects.list(req.user.id);
+    } catch (error) {
+        return next(new HttpError(500, error));
+    }
 
-        next(new HttpSuccess(200, { projects: result }));
-    });
+    next(new HttpSuccess(200, { projects: result }));
 }
 
-function projectAdd(req, res, next) {
+async function projectAdd(req, res, next) {
     assert.strictEqual(typeof req.user, 'object');
 
     if (!req.body.type) return next(new HttpError(400, 'type is required'));
@@ -118,47 +117,57 @@ function projectAdd(req, res, next) {
         origin: req.body.origin
     };
 
-    database.projects.add(project, function (error, result) {
-        if (error) return next(new HttpError(500, error));
+    let result;
+    try {
+        result = await database.projects.add(project);
+    } catch (error) {
+        return next(new HttpError(500, error));
+    }
 
-        next(new HttpSuccess(201, { project: result }));
+    next(new HttpSuccess(201, { project: result }));
 
-        // force an initial release sync
-        tasks.syncReleasesByProject(req.user, result, function (error) {
-            if (error) console.error('Failed to perfom initial sync.', error);
-        });
+    // force an initial release sync
+    tasks.syncReleasesByProject(req.user, result, function (error) {
+        if (error) console.error('Failed to perfom initial sync.', error);
     });
 }
 
-function projectsGet(req, res, next) {
+async function projectsGet(req, res, next) {
     assert.strictEqual(typeof req.user, 'object');
     assert.strictEqual(typeof req.params.projectId, 'string');
 
-    database.projects.get(req.user.id, req.params.projectId, function (error, result) {
-        if (error) return next(new HttpError(500, error));
+    let result;
+    try {
+        result = await database.projects.get(req.user.id, req.params.projectId);
+    } catch (error) {
+        return next(new HttpError(500, error));
+    }
 
-        next(new HttpSuccess(200, { project: result }));
-    });
+    next(new HttpSuccess(200, { project: result }));
 }
 
-function projectsUpdate(req, res, next) {
+async function projectsUpdate(req, res, next) {
     assert.strictEqual(typeof req.user, 'object');
     assert.strictEqual(typeof req.params.projectId, 'string');
 
-    database.projects.update(req.params.projectId, req.body, function (error) {
-        if (error) return next(new HttpError(500, error));
+    try {
+        await database.projects.update(req.params.projectId, req.body);
+    } catch (error) {
+        return next(new HttpError(500, error));
+    }
 
-        next(new HttpSuccess(202, {}));
-    });
+    next(new HttpSuccess(202, {}));
 }
 
-function projectsDelete(req, res, next) {
+async function projectsDelete(req, res, next) {
     assert.strictEqual(typeof req.user, 'object');
     assert.strictEqual(typeof req.params.projectId, 'string');
 
-    database.projects.remove(req.params.projectId, function (error) {
-        if (error) return next(new HttpError(500, error));
+    try {
+        database.projects.remove(req.params.projectId);
+    } catch (error) {
+        return next(new HttpError(500, error));
+    }
 
-        next(new HttpSuccess(202, {}));
-    });
+    next(new HttpSuccess(202, {}));
 }

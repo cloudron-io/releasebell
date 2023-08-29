@@ -110,46 +110,51 @@ function syncGithubStarredByUser(user, callback) {
 
     debug('syncGithubStarredByUser: ', user.id);
 
-    github.getStarred(user.githubToken, function (error, result) {
+    github.getStarred(user.githubToken, async function (error, result) {
         if (error) return callback(error);
 
         debug(`syncGithubStarredByUser: found ${result.length} starred repos`);
 
         // translate from github to internal model
-        var starredProjects = result.map(function (p) { return { name: p.full_name }; });
+        const starredProjects = result.map(function (p) { return { name: p.full_name }; });
 
-        database.projects.listByType(user.id, database.PROJECT_TYPE_GITHUB, function (error, trackedProjects) {
-            if (error) return callback(error);
+        let trackedProjects;
+        try {
+            trackedProjects = await database.projects.listByType(user.id, database.PROJECT_TYPE_GITHUB);
+        } catch (error) {
+            return callback(error);
+        }
 
-            var newProjects = starredProjects.filter(function (a) { return !trackedProjects.find(function (b) { return a.name === b.name; }); });
-            var outdatedProjects = trackedProjects.filter(function (a) { return !starredProjects.find(function (b) { return a.name === b.name; }); });
+        const newProjects = starredProjects.filter(function (a) { return !trackedProjects.find(function (b) { return a.name === b.name; }); });
+        const outdatedProjects = trackedProjects.filter(function (a) { return !starredProjects.find(function (b) { return a.name === b.name; }); });
 
-            debug(`syncGithubStarredByUser: new projects: ${newProjects.length} outdated projects: ${outdatedProjects.length}`);
+        debug(`syncGithubStarredByUser: new projects: ${newProjects.length} outdated projects: ${outdatedProjects.length}`);
 
-            // do not overwhelm github api with async.each() we hit rate limits if we do
-            async.eachSeries(newProjects, function (project, callback) {
-                debug(`syncGithubStarredByUser: [${project.name}] is new for user ${user.id}`);
+        // do not overwhelm github api with async.each() we hit rate limits if we do
+        async.eachSeries(newProjects, function (project, callback) {
+            debug(`syncGithubStarredByUser: [${project.name}] is new for user ${user.id}`);
 
-                // we add projects first with release notification disabled
-                database.projects.add({ type: database.PROJECT_TYPE_GITHUB, userId: user.id, name: project.name }, function (error, result) {
-                    if (error) return callback(error);
-
-                    // force an initial release sync
-                    syncReleasesByProject(user, result, callback);
-                });
-            }, function (error) {
+            // we add projects first with release notification disabled
+            database.projects.add({ type: database.PROJECT_TYPE_GITHUB, userId: user.id, name: project.name }, function (error, result) {
                 if (error) return callback(error);
 
-                async.each(outdatedProjects, function (project, callback) {
-                    debug(`syncGithubStarredByUser: [${project.name}] not starred anymore by ${user.id}`);
-
-                    database.projects.remove(project.id, callback);
-                }, function (error) {
-                    if (error) return callback(error);
-
-                    callback();
-                });
+                // force an initial release sync
+                syncReleasesByProject(user, result, callback);
             });
+        }, async function (error) {
+            if (error) return callback(error);
+
+            for (let project of outdatedProjects) {
+                debug(`syncGithubStarredByUser: [${project.name}] not starred anymore by ${user.id}`);
+
+                try {
+                    await database.projects.remove(project.id);
+                } catch (error) {
+                    console.error(`Failed to remove outdated project ${project.name} for ${user.id}`, error);
+                }
+            }
+
+            callback();
         });
     });
 }
@@ -173,75 +178,105 @@ function syncReleasesByProject(user, project, callback) {
         return callback();
     }
 
-    api.getReleases(user.githubToken, project, function (error, upstreamReleases) {
+    api.getReleases(user.githubToken, project, async function (error, upstreamReleases) {
         if (error) return callback(error);
 
-        database.releases.list(project.id, function (error, trackedReleases) {
+        let trackedReleases;
+        try {
+            trackedReleases = await database.releases.list(project.id);
+        } catch (error) {
+            return callback(error);
+        }
+
+        const newReleases = upstreamReleases.filter(function (a) { return !trackedReleases.find(function (b) { return a.version == b.version; }); });
+
+        debug(`syncReleasesByProject: [${project.name}] found ${newReleases.length} new releases`);
+
+        // only get the full commit for new releases
+        async.eachLimit(newReleases, 10, function (release, callback) {
+            // before initial successful sync and if notifications for this project are enabled, we mark the release as not notified yet
+            release.notified = !project.lastSuccessfulSyncAt ? true : !project.enabled;
+            release.body = '';
+            release.createdAt = 0;
+
+            // skip fetching details for notification which will not be sent
+            if (release.notified) {
+                return (async function inner() {
+                    let result;
+                    try {
+                        result = await database.releases.add(release);
+                    } catch (error) {
+                        return callback(error);
+                    }
+
+                    return callback(null, result);
+                })();
+            }
+
+            api.getReleaseBody(user.githubToken, project, release.version, function (error, result) {
+                if (error) console.error(`Failed to get release body for ${project.name} ${release.version}. Falling back to commit message.`, error);
+
+                release.body = result || '';
+
+                api.getCommit(user.githubToken, project, release.sha, async function (error, commit) {
+                    if (error) return callback(error);
+
+                    release.createdAt = new Date(commit.createdAt).getTime();
+                    // old code did not get all tags properly. this hack limits notifications to last 10 days
+                    if (Date.now() - release.createdAt > 10 * 24 * 60 * 60 * 1000) release.notified = true;
+
+                    debug(`syncReleasesByProject: [${project.name}] add release ${release.version} notified ${release.notified}`);
+
+                    if (!release.body) {
+                        // Set fallback body to the commit's message
+                        const fullBody = 'Latest commit message: \n' + commit.message;
+                        const releaseBody = fullBody.length > 1000 ? fullBody.substring(0, 1000) + '...' : fullBody;
+                        release.body = releaseBody;
+                    }
+
+                    let result;
+                    try {
+                        result = await database.releases.add(release);
+                    } catch (error) {
+                        return callback(error);
+                    }
+
+                    callback(null, result);
+                });
+            });
+        }, async function (error) {
             if (error) return callback(error);
 
-            var newReleases = upstreamReleases.filter(function (a) { return !trackedReleases.find(function (b) { return a.version == b.version; }); });
+            debug(`syncReleasesByProject: [${project.name}] successfully synced`);
 
-            debug(`syncReleasesByProject: [${project.name}] found ${newReleases.length} new releases`);
+            // set the last successful sync time
+            try {
+                await database.projects.update(project.id, { lastSuccessfulSyncAt: Date.now() });
+            } catch (error) {
+                return callback(error);
+            }
 
-            // only get the full commit for new releases
-            async.eachLimit(newReleases, 10, function (release, callback) {
-                // before initial successful sync and if notifications for this project are enabled, we mark the release as not notified yet
-                release.notified = !project.lastSuccessfulSyncAt ? true : !project.enabled;
-                release.body = '';
-                release.createdAt = 0;
-
-                // skip fetching details for notification which will not be sent
-                if (release.notified) return database.releases.add(release, callback);
-
-                api.getReleaseBody(user.githubToken, project, release.version, function (error, result) {
-                    if (error) console.error(`Failed to get release body for ${project.name} ${release.version}. Falling back to commit message.`, error);
-
-                    release.body = result || '';
-
-                    api.getCommit(user.githubToken, project, release.sha, function (error, commit) {
-                        if (error) return callback(error);
-
-                        release.createdAt = new Date(commit.createdAt).getTime();
-                        // old code did not get all tags properly. this hack limits notifications to last 10 days
-                        if (Date.now() - release.createdAt > 10 * 24 * 60 * 60 * 1000) release.notified = true;
-
-                        debug(`syncReleasesByProject: [${project.name}] add release ${release.version} notified ${release.notified}`);
-
-                        if (!release.body) {
-                            // Set fallback body to the commit's message
-                            const fullBody = "Latest commit message: \n" + commit.message;
-                            const releaseBody = fullBody.length > 1000 ? fullBody.substring(0, 1000) + "..." : fullBody;
-                            release.body = releaseBody;
-                        }
-
-                        database.releases.add(release, callback);
-                    });
-                });
-            }, function (error) {
-                if (error) return callback(error);
-
-                debug(`syncReleasesByProject: [${project.name}] successfully synced`);
-
-                // set the last successful sync time
-                database.projects.update(project.id, { lastSuccessfulSyncAt: Date.now() }, callback);
-            });
+            callback();
         });
     });
 }
 
-function syncReleasesByUser(user, callback) {
+async function syncReleasesByUser(user, callback) {
     assert.strictEqual(typeof user, 'object');
     assert.strictEqual(typeof callback, 'function');
 
-    database.projects.list(user.id, function (error, projects) {
-        if (error) return callback(error);
+    let projects;
+    try {
+        projects = await database.projects.list(user.id);
+    } catch (error) {
+        return callback(error);
+    }
 
-        shuffleArray(projects);
+    shuffleArray(projects);
 
-        async.eachSeries(projects, function (project, callback) {
-            syncReleasesByProject(user, project, callback);
-        }, callback);
-    });
+    async.eachSeries(projects, function (project, callback) {
+        syncReleasesByProject(user, project, callback);
+    }, callback);
 }
 
 async function syncReleases(callback) {
@@ -267,7 +302,7 @@ async function syncReleases(callback) {
     }, callback);
 }
 
-function sendNotificationEmail(release, callback) {
+async function sendNotificationEmail(release, callback) {
     assert.strictEqual(typeof release, 'object');
     assert.strictEqual(typeof callback, 'function');
 
@@ -276,62 +311,74 @@ function sendNotificationEmail(release, callback) {
         return callback();
     }
 
-    database.projects.get(release.projectId, function (error, project) {
+    let project;
+    try {
+        project = await database.projects.get(release.projectId);
+    } catch (error) {
+        return callback(error);
+    }
+
+    let user;
+    try {
+        user = database.users.get(project.userId);
+    } catch (error) {
+        return callback(error);
+    }
+
+    const transport = nodemailer.createTransport(smtpTransport({
+        host: process.env.CLOUDRON_MAIL_SMTP_SERVER,
+        port: process.env.CLOUDRON_MAIL_SMTP_PORT,
+        auth: {
+            user: process.env.CLOUDRON_MAIL_SMTP_USERNAME,
+            pass: process.env.CLOUDRON_MAIL_SMTP_PASSWORD
+        }
+    }));
+
+    let versionLink;
+    if (project.type === database.PROJECT_TYPE_GITHUB) {
+        versionLink = `https://github.com/${project.name}/releases/tag/${release.version}`;
+    } else if (project.type === database.PROJECT_TYPE_GITLAB) {
+        versionLink = `${project.origin}/${project.name}/-/tags/${release.version}`;
+    }
+    const settingsLink = process.env.CLOUDRON_APP_ORIGIN || '';
+
+    const mail = {
+        from: `ReleaseBell <${process.env.CLOUDRON_MAIL_FROM}>`,
+        to: user.email,
+        subject: `${project.name} ${release.version} released`,
+        text: `A new release at ${project.name} with version ${release.version} was published. ${release.body}. Read more about this release at ${versionLink}`,
+        html: EMAIL_TEMPLATE({ project: project, release: release, versionLink: versionLink, settingsLink: settingsLink })
+    };
+
+    transport.sendMail(mail, async function (error) {
         if (error) return callback(error);
 
-        let user;
         try {
-            user = database.users.get(project.userId);
+            await database.releases.update(release.id, { notified: true });
         } catch (error) {
             return callback(error);
         }
 
-        var transport = nodemailer.createTransport(smtpTransport({
-            host: process.env.CLOUDRON_MAIL_SMTP_SERVER,
-            port: process.env.CLOUDRON_MAIL_SMTP_PORT,
-            auth: {
-                user: process.env.CLOUDRON_MAIL_SMTP_USERNAME,
-                pass: process.env.CLOUDRON_MAIL_SMTP_PASSWORD
-            }
-        }));
-
-        let versionLink;
-        if (project.type === database.PROJECT_TYPE_GITHUB) {
-            versionLink = `https://github.com/${project.name}/releases/tag/${release.version}`;
-        } else if (project.type === database.PROJECT_TYPE_GITLAB) {
-            versionLink = `${project.origin}/${project.name}/-/tags/${release.version}`;
-        }
-        const settingsLink = process.env.CLOUDRON_APP_ORIGIN || '';
-
-        var mail = {
-            from: `ReleaseBell <${process.env.CLOUDRON_MAIL_FROM}>`,
-            to: user.email,
-            subject: `${project.name} ${release.version} released`,
-            text: `A new release at ${project.name} with version ${release.version} was published. ${release.body}. Read more about this release at ${versionLink}`,
-            html: EMAIL_TEMPLATE({ project: project, release: release, versionLink: versionLink, settingsLink: settingsLink })
-        };
-
-        transport.sendMail(mail, function (error) {
-            if (error) return callback(error);
-
-            database.releases.update(release.id, { notified: true }, callback);
-        });
+        callback(null);
     });
 }
 
-function sendNotifications(callback) {
+async function sendNotifications(callback) {
     assert.strictEqual(typeof callback, 'function');
 
-    database.releases.listAllPending(function (error, result) {
-        if (error) return callback(error);
+    let result;
+    try {
+        result = await database.releases.listAllPending();
+    } catch (error) {
+        return callback(error);
+    }
 
-        async.eachSeries(result, function (release, callback) {
-            sendNotificationEmail(release, function (error) {
-                if (error) console.error(error);
+    async.eachSeries(result, function (release, callback) {
+        sendNotificationEmail(release, function (error) {
+            if (error) console.error(error);
 
-                // ignore individual errors
-                callback();
-            });
-        }, callback);
-    });
+            // ignore individual errors
+            callback();
+        });
+    }, callback);
 }

@@ -25,15 +25,13 @@ module.exports = exports = {
         add: projectsAdd,
         get: projectsGet,
         update: projectsUpdate,
-        remove: projectsRemove,
-        removeAll: projectsRemoveAll
+        remove: projectsRemove
     },
 
     releases: {
         list: releasesList,
         listAllPending: releasesListAllPending,
         add: releasesAdd,
-        get: releasesGet,
         update: releasesUpdate
     }
 };
@@ -41,10 +39,9 @@ module.exports = exports = {
 var db = null;
 var dbPromise;
 
-function init(callback) {
-    assert.strictEqual(typeof callback, 'function');
+function init() {
+    const config = require('../database.json');
 
-    var config = require('../database.json');
     if (!config.defaultEnv) {
         console.error('defaultEnv missing from database.json');
         process.exit(1);
@@ -61,8 +58,6 @@ function init(callback) {
     });
 
     dbPromise = db.promise();
-
-    callback();
 }
 
 function projectPostprocess(p) {
@@ -70,34 +65,29 @@ function projectPostprocess(p) {
     return p;
 }
 
-function projectsList(userId, callback) {
+async function projectsList(userId) {
     assert.strictEqual(typeof userId, 'string');
-    assert.strictEqual(typeof callback, 'function');
 
     // we order by lastSuccessfulSyncAt so that if we hit API rate limits, each project gets a chance eventually
-    db.query('SELECT projects.*,releases.version,releases.createdAt FROM projects LEFT JOIN releases on releases.id = (SELECT releases.id FROM releases WHERE projectId=projects.id ORDER BY createdAt DESC LIMIT 1) WHERE userId=? ORDER BY lastSuccessfulSyncAt ASC', [ userId ], function (error, result) {
-        if (error) return callback(error);
+    const [result] = await dbPromise.query('SELECT projects.*,releases.version,releases.createdAt FROM projects LEFT JOIN releases on releases.id = (SELECT releases.id FROM releases WHERE projectId=projects.id ORDER BY createdAt DESC LIMIT 1) WHERE userId=? ORDER BY lastSuccessfulSyncAt ASC', [ userId ]);
 
-        result.forEach(projectPostprocess);
+    result.forEach(projectPostprocess);
 
-        callback(null, result);
-    });
+    return result;
 }
 
-function projectsListByType(userId, type, callback) {
+async function projectsListByType(userId, type) {
     assert.strictEqual(typeof userId, 'string');
     assert.strictEqual(typeof type, 'string');
-    assert.strictEqual(typeof callback, 'function');
 
-    db.query('SELECT projects.*,releases.version,releases.createdAt FROM projects LEFT JOIN releases on releases.id = (SELECT releases.id FROM releases WHERE projectId=projects.id ORDER BY createdAt DESC LIMIT 1) WHERE userId=? AND type=?', [ userId, type ], function (error, result) {
-        if (error) return callback(error);
+    const [result] = await dbPromise.query('SELECT projects.*,releases.version,releases.createdAt FROM projects LEFT JOIN releases on releases.id = (SELECT releases.id FROM releases WHERE projectId=projects.id ORDER BY createdAt DESC LIMIT 1) WHERE userId=? AND type=?', [ userId, type ]);
 
-        result.forEach(projectPostprocess);
+    result.forEach(projectPostprocess);
 
-        callback(null, result);
-    });
+    return result;
 }
 
+// TODO needs asyncification in tasks.js syncGithubStarredByUser
 function projectsAdd(project, callback) {
     assert.strictEqual(typeof project, 'object');
     assert.strictEqual(typeof callback, 'function');
@@ -112,50 +102,28 @@ function projectsAdd(project, callback) {
     });
 }
 
-function projectsGet(projectId, callback) {
+async function projectsGet(projectId) {
     assert.strictEqual(typeof projectId, 'string');
-    assert.strictEqual(typeof callback, 'function');
 
-    db.query('SELECT * FROM projects WHERE id=?', [ projectId ], function (error, result) {
-        if (error) return callback(error);
-        callback(null, projectPostprocess(result[0]));
-    });
+    const [result] = await dbPromise.query('SELECT * FROM projects WHERE id=?', [ projectId ]);
+    if (!result.length) throw new Error('not found');
+
+    return projectPostprocess(result[0]);
 }
 
 // we only allow updating the enabled flag for now
-function projectsUpdate(projectId, data, callback) {
+async function projectsUpdate(projectId, data) {
     assert.strictEqual(typeof projectId, 'string');
     assert.strictEqual(typeof data, 'object');
-    assert.strictEqual(typeof callback, 'function');
 
-    db.query('UPDATE projects SET ? WHERE id=?', [ data, projectId ], function (error) {
-        if (error) return callback(error);
-        callback(null);
-    });
+    await dbPromise.query('UPDATE projects SET ? WHERE id=?', [ data, projectId ]);
 }
 
-function projectsRemove(projectId, callback) {
+async function projectsRemove(projectId) {
     assert.strictEqual(typeof projectId, 'string');
-    assert.strictEqual(typeof callback, 'function');
 
-    db.query('DELETE FROM releases WHERE projectId=?', [ projectId ], function (error) {
-        if (error) return callback(error);
-
-        db.query('DELETE FROM projects WHERE id=?', [ projectId ], function (error) {
-            if (error) return callback(error);
-            callback();
-        });
-    });
-}
-
-function projectsRemoveAll(userId, callback) {
-    assert.strictEqual(typeof userId, 'string');
-    assert.strictEqual(typeof callback, 'function');
-
-    db.query('DELETE FROM projects WHERE userId=?', [ userId ], function (error) {
-        if (error) return callback(error);
-        callback(null);
-    });
+    await db.query('DELETE FROM releases WHERE projectId=?', [ projectId ]);
+    await db.query('DELETE FROM projects WHERE id=?', [ projectId ]);
 }
 
 async function usersList() {
@@ -187,58 +155,36 @@ async function usersUpdate(userId, githubToken) {
     await dbPromise.query('UPDATE users SET githubToken=? WHERE id=?', [ githubToken, userId ]);
 }
 
-function releasesList(projectId, callback) {
+async function releasesList(projectId) {
     assert.strictEqual(typeof projectId, 'string');
-    assert.strictEqual(typeof callback, 'function');
 
-    db.query('SELECT * FROM releases WHERE projectId=?', [ projectId ], function (error, result) {
-        if (error) return callback(error);
-        callback(null, result);
-    });
+    const [result] = await dbPromise.query('SELECT * FROM releases WHERE projectId=?', [ projectId ]);
+
+    return result;
 }
 
-function releasesAdd(release, callback) {
+async function releasesAdd(release) {
     assert.strictEqual(typeof release, 'object');
-    assert.strictEqual(typeof callback, 'function');
 
     release.id = uuid.v4();
 
     // don't store
     delete release.sha;
 
-    db.query('INSERT INTO releases SET ?', release, function (error) {
-        if (error) return callback(error);
-        callback(null, release);
-    });
-}
+    await dbPromise.query('INSERT INTO releases SET ?', release);
 
-function releasesGet(releaseId, callback) {
-    assert.strictEqual(typeof projectId, 'string');
-    assert.strictEqual(typeof callback, 'function');
-
-    db.query('SELECT * FROM releases WHERE releaseId=?', [ releaseId ], function (error, result) {
-        if (error) return callback(error);
-        callback(null, result[0]);
-    });
+    return release;
 }
 
 // we only allow updating the notfied flag for now
-function releasesUpdate(releaseId, data, callback) {
+async function releasesUpdate(releaseId, data) {
     assert.strictEqual(typeof releaseId, 'string');
     assert.strictEqual(typeof data, 'object');
-    assert.strictEqual(typeof callback, 'function');
 
-    db.query('UPDATE releases SET notified=? WHERE id=?', [ data.notified, releaseId ], function (error) {
-        if (error) return callback(error);
-        callback(null);
-    });
+    await dbPromise.query('UPDATE releases SET notified=? WHERE id=?', [ data.notified, releaseId ]);
 }
 
-function releasesListAllPending(callback) {
-    assert.strictEqual(typeof callback, 'function');
-
-    db.query('SELECT * FROM releases WHERE notified=FALSE', [], function (error, result) {
-        if (error) return callback(error);
-        callback(null, result);
-    });
+async function releasesListAllPending() {
+    const [result] = await dbPromise.query('SELECT * FROM releases WHERE notified=FALSE', []);
+    return result;
 }

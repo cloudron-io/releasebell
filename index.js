@@ -10,14 +10,12 @@ var server = require('./backend/server.js'),
 
 const PORT = process.env.PORT || 3000;
 
-database.init(function (error) {
-    if (error) return console.error('Failed to init database.', error);
+database.init();
 
-    server.start(parseInt(PORT), function (error) {
-        if (error) return console.error('Failed to start server.', error);
+server.start(parseInt(PORT), function (error) {
+    if (error) return console.error('Failed to start server.', error);
 
-        console.log(`Server is up and running on port ${PORT}`);
+    console.log(`Server is up and running on port ${PORT}`);
 
-        tasks.run();
-    });
+    tasks.run();
 });
