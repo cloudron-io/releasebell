@@ -18,16 +18,22 @@ function buildOctokit(token) {
     const octokit = new CustomOctokit({
         auth: token,
         userAgent: 'releasebell@cloudron',
+        log: {
+            debug: console.log,
+            info: console.log,
+            warn: console.warn,
+            error: console.error
+        },
         throttle: {
             onRateLimit: (retryAfter, options) => {
                 console.log(`Request quota exhausted for request ${options.method} ${options.url}`);
                 console.log(`Already retried ${options.request.retryCount} times. Retrying again after ${retryAfter} seconds!`);
                 return true;
             },
-            onAbuseLimit: (retryAfter, options) => {
-              // does not retry, only logs a warning
-              console.log(`Abuse detected for request ${options.method} ${options.url}`);
-            },
+            onSecondaryRateLimit: (retryAfter, options) => {
+                // does not retry, only logs a warning
+                console.log(`SecondaryRateLimit detected for request ${options.method} ${options.url}`);
+            }
         },
         retry: {
             doNotRetry: ['429'],
