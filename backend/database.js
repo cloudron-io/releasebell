@@ -158,7 +158,7 @@ function projectsRemoveAll(userId, callback) {
 }
 
 async function usersList() {
-    return await db.query('SELECT * FROM users', []);
+    return await db.query('SELECT * FROM users', []).values;
 }
 
 async function usersAdd(user) {
@@ -175,7 +175,7 @@ async function usersGet(userId) {
     const result = await db.query('SELECT * FROM users WHERE id=?', [ userId ]);
     if (!result.length) throw new Error('no such user');
 
-    return result[0];
+    return result.values[0];
 }
 
 async function usersUpdate(userId, githubToken) {
