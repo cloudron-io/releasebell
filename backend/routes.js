@@ -69,26 +69,28 @@ function profileGet(req, res, next) {
     next(new HttpSuccess(200, { user: req.user }));
 }
 
-function profileUpdate(req, res, next) {
+async function profileUpdate(req, res, next) {
     assert.strictEqual(typeof req.user, 'object');
 
     const githubToken = req.body.githubToken || '';
 
-    github.verifyToken(githubToken, async function (error) {
-        if (error) return next(new HttpError(402, error.message));
+    try {
+        await github.verifyToken(githubToken);
+    } catch (error) {
+        return next(new HttpError(402, error.message));
+    }
 
-        try {
-            await database.users.update(req.user.id, githubToken);
-        } catch (error) {
-            return next(new HttpError(500, error));
-        }
-        req.user.githubToken = githubToken;
+    try {
+        await database.users.update(req.user.id, githubToken);
+    } catch (error) {
+        return next(new HttpError(500, error));
+    }
+    req.user.githubToken = githubToken;
 
-        next(new HttpSuccess(202, {}));
+    next(new HttpSuccess(202, {}));
 
-        // kick off a round of syncing for the new github token
-        if (githubToken) tasks.run();
-    });
+    // kick off a round of syncing for the new github token
+    if (githubToken) tasks.run();
 }
 
 async function projectsList(req, res, next) {

@@ -51,17 +51,27 @@ function handleError(callback) {
     };
 }
 
-function verifyToken(token, callback) {
-    assert.strictEqual(typeof token, 'string');
-    assert.strictEqual(typeof callback, 'function');
+function rethrow(error) {
+    if (error.status === 403 && error.message.indexOf('API rate limit exceeded') === 0) {
+        error.message = 'GitHub rate limit exceeded. Please wait a bit.';
+        error.retryAt = error.response.headers['x-ratelimit-reset'] ? parseInt(error.response.headers['x-ratelimit-reset'])*1000 : 0;
+    }
 
-    if (!token) return callback(null);
+    throw error;
+}
+
+async function verifyToken(token) {
+    assert.strictEqual(typeof token, 'string');
+
+    if (!token) return;
 
     const octokit = buildOctokit(token);
 
-    octokit.users.getAuthenticated().then(function () {
-        callback();
-    }, handleError(callback));
+    try {
+        await octokit.users.getAuthenticated();
+    } catch (error) {
+        rethrow(error);
+    }
 }
 
 function getStarred(token, callback) {

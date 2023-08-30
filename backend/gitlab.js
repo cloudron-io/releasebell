@@ -11,11 +11,10 @@ module.exports = exports = {
     getCommit
 };
 
-function verifyToken(token, callback) {
+function verifyToken(token) {
     assert.strictEqual(typeof token, 'string');
-    assert.strictEqual(typeof callback, 'function');
 
-    callback(new Error('not implemented'));
+    throw new Error('not implemented');
 }
 
 function getStarred(token, callback) {
