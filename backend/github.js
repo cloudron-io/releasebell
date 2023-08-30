@@ -132,7 +132,7 @@ async function getReleaseBody(token, project, version) {
 }
 
 // Returns { createdAt, message }
-function getCommit(token, project, commit_sha) {
+async function getCommit(token, project, commit_sha) {
     assert.strictEqual(typeof token, 'string');
     assert.strictEqual(typeof project, 'object');
     assert.strictEqual(typeof commit_sha, 'string');
@@ -143,14 +143,13 @@ function getCommit(token, project, commit_sha) {
 
     let result;
     try {
-        result = octokit.git.getCommit({ owner, repo, commit_sha });
+        result = await octokit.git.getCommit({ owner, repo, commit_sha });
     } catch (error) {
         rethrow(error);
     }
 
     return {
-        createdAt:
-        result.data.committer.date,
+        createdAt: result.data.committer.date,
         message: result.data.message
     };
 }
