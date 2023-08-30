@@ -62,6 +62,7 @@ function init() {
 
 function projectPostprocess(p) {
     if (p.lastSuccessfulSyncAt === '0000-00-00 00:00:00') p.lastSuccessfulSyncAt = 0;
+    p.enabled = !!p.enabled;
     return p;
 }
 

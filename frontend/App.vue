@@ -53,6 +53,9 @@
         <template #left>
           <img src="/favicon.png" style="height: 24px; margin-right: 10px"/> Release Bell
         </template>
+        <template #center>
+          <Button aria-label="Refresh" text icon="pi pi-refresh" :loading="refreshBusy" @click="refresh()"/>
+        </template>
         <template #right>
           <Button class="p-button-sm" style="margin-right: 10px" severity="primary" icon="pi pi-plus" label="Add Project" @click="onShowAddProjectDialog()"/>
           <Button class="p-button-sm" style="margin-right: 10px" severity="primary" icon="pi pi-cog" label="Settings" @click="onShowSettingsDialog()"/>
@@ -61,42 +64,40 @@
       </TopBar>
     </template>
     <template #body>
-      <div class="main-view">
-        <div style="text-align: center;" v-show="projects.length === 0">
-          <img src="/favicon.png" style="width: 64px;"/>
-          <h1>Welcome to Release Bell</h1>
-          <p>Set a GitHub token in your <a href="" @click.prevent="onShowSettingsDialog()">profile</a> to start receiving new release notifcations for your starred repos or add <a href="" @click.prevent="onShowAddProjectDialog()">GitLab project URLs</a> for release notifications for those projects.</p>
-        </div>
-        <DataTable :value="projects" stripedRows style="max-width: 1280px; margin: auto" tableStyle="min-width: 50rem" v-show="projects.length !== 0" class="p-datatable-sm">
-          <Column field="name" header="Name" sortable>
-            <template #body="slotProps">
-              <a :href="'https://github.com/' + slotProps.data.name" target="_blank" v-show="slotProps.data.type === 'github' || slotProps.data.type === 'github_manual'">{{ slotProps.data.name }}</a>
-              <a :href="slotProps.data.origin + '/' + slotProps.data.name" target="_blank" v-show="slotProps.data.type === 'gitlab'">{{ slotProps.data.name }}</a>
-            </template>
-          </Column>
-          <Column field="type" header="Type" sortable>
-            <template #body="slotProps">
-              <img :src="'/' + slotProps.data.type + '.svg'" class="type-icon"/> {{ slotProps.data.type }}
-            </template>
-          </Column>
-          <Column field="version" header="Last Version" sortable>
-            <template #body="slotProps">
-              <a :href="'https://github.com/' + slotProps.data.name + '/releases/tag/' + slotProps.data.version" target="_blank" v-show="slotProps.data.type === 'github' || slotProps.data.type === 'github_manual'">{{ slotProps.data.version }}</a>
-              <a :href="slotProps.data.origin + '/' + slotProps.data.name + '/-/tags/' + slotProps.data.version" target="_blank" v-show="slotProps.data.type === 'gitlab'">{{ slotProps.data.version }}</a>
-            </template>
-          </Column>
-          <Column field="createdAt" header="Released At" sortable>
-            <template #body="slotProps">
-              {{ prettyDate(slotProps.data.createdAt) }}
-            </template>
-          </Column>
-          <Column>
-            <template #body="slotProps">
-
-            </template>
-          </Column>
-        </DataTable>
+      <div style="text-align: center;" v-show="projects.length == 0">
+        <img src="/favicon.png" style="width: 64px;"/>
+        <h1>Welcome to Release Bell</h1>
+        <p>Set a GitHub token in your <a href="" @click.prevent="onShowSettingsDialog()">profile</a> to start receiving new release notifcations for your starred repos or add <a href="" @click.prevent="onShowAddProjectDialog()">GitLab project URLs</a> for release notifications for those projects.</p>
       </div>
+      <DataTable :value="projects" scrollable scrollHeight="flex" stripedRows style="max-width: 1280px; margin: auto" tableStyle="min-width: 50rem" v-show="projects.length !== 0" class="p-datatable-sm">
+        <Column field="name" header="Name" sortable>
+          <template #body="slotProps">
+            <a :href="'https://github.com/' + slotProps.data.name" target="_blank" v-show="slotProps.data.type === 'github' || slotProps.data.type === 'github_manual'">{{ slotProps.data.name }}</a>
+            <a :href="slotProps.data.origin + '/' + slotProps.data.name" target="_blank" v-show="slotProps.data.type === 'gitlab'">{{ slotProps.data.name }}</a>
+          </template>
+        </Column>
+        <Column field="type" header="Type" sortable>
+          <template #body="slotProps">
+            <img :src="'/' + slotProps.data.type + '.svg'" class="type-icon"/> {{ slotProps.data.type }}
+          </template>
+        </Column>
+        <Column field="version" header="Last Version" sortable>
+          <template #body="slotProps">
+            <a :href="'https://github.com/' + slotProps.data.name + '/releases/tag/' + slotProps.data.version" target="_blank" v-show="slotProps.data.type === 'github' || slotProps.data.type === 'github_manual'">{{ slotProps.data.version }}</a>
+            <a :href="slotProps.data.origin + '/' + slotProps.data.name + '/-/tags/' + slotProps.data.version" target="_blank" v-show="slotProps.data.type === 'gitlab'">{{ slotProps.data.version }}</a>
+          </template>
+        </Column>
+        <Column field="createdAt" header="Released At" sortable>
+          <template #body="slotProps">
+            {{ prettyDate(slotProps.data.createdAt) }}
+          </template>
+        </Column>
+        <Column field="enabled" header="Track" sortable>
+          <template #body="slotProps">
+            <InputSwitch v-model="slotProps.data.enabled" @change="onTrackStateChanged(slotProps.data)" />
+          </template>
+        </Column>
+      </DataTable>
     </template>
   </MainLayout>
 </template>
@@ -109,6 +110,7 @@ import Button from 'primevue/button';
 import Dropdown from 'primevue/dropdown';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
+import InputSwitch from 'primevue/inputswitch';
 
 import { BottomBar, MainLayout, TopBar } from 'pankow';
 
@@ -122,6 +124,7 @@ export default {
     Column,
     DataTable,
     Dropdown,
+    InputSwitch,
     MainLayout,
     TopBar
   },
@@ -129,6 +132,7 @@ export default {
     return {
       busy: true,
       user: null,
+      refreshBusy: false,
       projects: [],
       loginUrl: `${API_ORIGIN}/api/v1/login?returnTo=${location.origin}`,
       projectTypes: [{
@@ -173,14 +177,17 @@ export default {
         day_diff < 365 && Math.round( day_diff / 30 ) +  ' months ago' ||
         Math.round( day_diff / 365 ) + ' years ago';
     },
+    async onTrackStateChanged(project) {
+      await superagent.post(`${API_ORIGIN}/api/v1/projects/${project.id}`).send({ enabled: project.enabled });
+    },
     async onLogout() {
       await superagent.get(`${API_ORIGIN}/api/v1/logout?return_to=${location.origin}`);
       this.user = null;
     },
     async refresh() {
+      this.refreshBusy = true;
       const result = await superagent.get(`${API_ORIGIN}/api/v1/projects`);
-      // if (error) return that.onError(error);
-      // if (result.statusCode !== 200) return that.onError('Unexpected response: ' + result.statusCode + ' ' + result.text);
+      this.refreshBusy = false;
 
       this.projects = result.body.projects;
     },
