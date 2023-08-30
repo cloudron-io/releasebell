@@ -113,28 +113,29 @@ function getReleases(token, project, callback) {
     }, handleError(callback));
 }
 
-function getReleaseBody(token, project, version, callback) {
+async function getReleaseBody(token, project, version) {
     assert.strictEqual(typeof token, 'string');
     assert.strictEqual(typeof project, 'object');
     assert.strictEqual(typeof version, 'string');
-    assert.strictEqual(typeof callback, 'function');
 
     const octokit = buildOctokit(token);
     const [ owner, repo ] = project.name.split('/');
 
-    octokit.repos.getReleaseByTag({ owner, repo, tag: version }).then(function (release) {
-        if (!release.data.body) return callback(null, '');
-
-        const fullBody = release.data.body.replace(/\r\n/g, '\n');
-
-        callback(null, fullBody.length > 1000 ? fullBody.substring(0, 1000) + '...' : fullBody);
-
-    }, function (error) {
+    let release;
+    try {
+        release = await octokit.repos.getReleaseByTag({ owner, repo, tag: version });
+    } catch (error) {
         // no release tags is not an error
-        if (error.status === 404) return callback(null, '');
+        if (error.status === 404) return '';
 
-        handleError(callback)(error);
-    });
+        rethrow(error);
+    }
+
+    if (!release.data.body) return '';
+
+    const fullBody = release.data.body.replace(/\r\n/g, '\n');
+
+    return fullBody.length > 1000 ? fullBody.substring(0, 1000) + '...' : fullBody;
 }
 
 // Returns { createdAt, message }

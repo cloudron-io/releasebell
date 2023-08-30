@@ -196,7 +196,7 @@ function syncReleasesByProject(user, project, callback) {
         debug(`syncReleasesByProject: [${project.name}] found ${newReleases.length} new releases`);
 
         // only get the full commit for new releases
-        async.eachLimit(newReleases, 10, function (release, callback) {
+        for (let release of newReleases) {
             // before initial successful sync and if notifications for this project are enabled, we mark the release as not notified yet
             release.notified = !project.lastSuccessfulSyncAt ? true : !project.enabled;
             release.body = '';
@@ -204,66 +204,41 @@ function syncReleasesByProject(user, project, callback) {
 
             // skip fetching details for notification which will not be sent
             if (release.notified) {
-                return (async function inner() {
-                    let result;
-                    try {
-                        result = await database.releases.add(release);
-                    } catch (error) {
-                        return callback(error);
-                    }
-
-                    return callback(null, result);
-                })();
+                await database.releases.add(release);
+                continue;
             }
 
-            api.getReleaseBody(user.githubToken, project, release.version, async function (error, result) {
-                if (error) console.error(`Failed to get release body for ${project.name} ${release.version}. Falling back to commit message.`, error);
-
-                release.body = result || '';
-
-                let commit;
-                try {
-                    commit = api.getCommit(user.githubToken, project, release.sha);
-                } catch (error) {
-                    return callback(error);
-                }
-
-                release.createdAt = new Date(commit.createdAt).getTime();
-                // old code did not get all tags properly. this hack limits notifications to last 10 days
-                if (Date.now() - release.createdAt > 10 * 24 * 60 * 60 * 1000) release.notified = true;
-
-                debug(`syncReleasesByProject: [${project.name}] add release ${release.version} notified ${release.notified}`);
-
-                if (!release.body) {
-                    // Set fallback body to the commit's message
-                    const fullBody = 'Latest commit message: \n' + commit.message;
-                    const releaseBody = fullBody.length > 1000 ? fullBody.substring(0, 1000) + '...' : fullBody;
-                    release.body = releaseBody;
-                }
-
-                let finalRelease;
-                try {
-                    finalRelease = await database.releases.add(release);
-                } catch (error) {
-                    return callback(error);
-                }
-
-                callback(null, finalRelease);
-            });
-        }, async function (error) {
-            if (error) return callback(error);
-
-            debug(`syncReleasesByProject: [${project.name}] successfully synced`);
-
-            // set the last successful sync time
+            let result;
             try {
-                await database.projects.update(project.id, { lastSuccessfulSyncAt: Date.now() });
+                result = await api.getReleaseBody(user.githubToken, project, release.version);
             } catch (error) {
-                return callback(error);
+                console.error(`Failed to get release body for ${project.name} ${release.version}. Falling back to commit message.`, error);
             }
 
-            callback();
-        });
+            release.body = result || '';
+
+            const commit = api.getCommit(user.githubToken, project, release.sha);
+
+            release.createdAt = new Date(commit.createdAt).getTime();
+            // old code did not get all tags properly. this hack limits notifications to last 10 days
+            if (Date.now() - release.createdAt > 10 * 24 * 60 * 60 * 1000) release.notified = true;
+
+            debug(`syncReleasesByProject: [${project.name}] add release ${release.version} notified ${release.notified}`);
+
+            if (!release.body) {
+                // Set fallback body to the commit's message
+                const fullBody = 'Latest commit message: \n' + commit.message;
+                const releaseBody = fullBody.length > 1000 ? fullBody.substring(0, 1000) + '...' : fullBody;
+                release.body = releaseBody;
+            }
+
+            await database.releases.add(release);
+        }
+
+        debug(`syncReleasesByProject: [${project.name}] successfully synced`);
+
+        // set the last successful sync time
+        await database.projects.update(project.id, { lastSuccessfulSyncAt: Date.now() });
     });
 }
 

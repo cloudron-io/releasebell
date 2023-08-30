@@ -52,13 +52,12 @@ function getReleases(token, project, callback) {
     });
 }
 
-function getReleaseBody(token, project, version, callback) {
+function getReleaseBody(token, project, version) {
     assert.strictEqual(typeof token, 'string');
     assert.strictEqual(typeof project, 'object');
     assert.strictEqual(typeof version, 'string');
-    assert.strictEqual(typeof callback, 'function');
 
-    callback(null, '');
+    return '';
 }
 
 // Returns { createdAt, message }
