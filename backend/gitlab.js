@@ -17,11 +17,10 @@ function verifyToken(token) {
     throw new Error('not implemented');
 }
 
-function getStarred(token, callback) {
+function getStarred(token) {
     assert.strictEqual(typeof token, 'string');
-    assert.strictEqual(typeof callback, 'function');
 
-    callback(new Error('not implemented'));
+    throw new Error('not implemented');
 }
 
 // Returns [{ projectId, version, createdAt, sha, body }]
@@ -63,15 +62,15 @@ function getReleaseBody(token, project, version, callback) {
 }
 
 // Returns { createdAt, message }
-function getCommit(token, project, sha, callback) {
+async function getCommit(token, project, sha) {
     assert.strictEqual(typeof token, 'string');
     assert.strictEqual(typeof project, 'object');
     assert.strictEqual(typeof sha, 'string');
-    assert.strictEqual(typeof callback, 'function');
 
-    superagent.get(project.origin + '/api/v4/projects/' + encodeURIComponent(project.name) + '/repository/commits/' + sha).end(function (error, result) {
-        if (error) console.error(error);
+    const result = await superagent.get(`${project.origin}/api/v4/projects/${encodeURIComponent(project.name)}/repository/commits/${sha}`);
 
-        callback(null, { createdAt: result.body.committed_date, message: result.body.message });
-    });
+    return {
+        createdAt: result.body.committed_date,
+        message: result.body.message
+    };
 }

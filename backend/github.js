@@ -74,15 +74,19 @@ async function verifyToken(token) {
     }
 }
 
-function getStarred(token, callback) {
+async function getStarred(token) {
     assert.strictEqual(typeof token, 'string');
-    assert.strictEqual(typeof callback, 'function');
 
     const octokit = buildOctokit(token);
 
-    octokit.paginate(octokit.activity.listReposStarredByAuthenticatedUser).then(function (result) {
-        callback(null, result);
-    }, handleError(callback));
+    let result;
+    try {
+        result = await octokit.paginate(octokit.activity.listReposStarredByAuthenticatedUser);
+    } catch (error) {
+        rethrow(error);
+    }
+
+    return result;
 }
 
 // Returns [{ projectId, version, createdAt, sha, body }]
@@ -134,16 +138,25 @@ function getReleaseBody(token, project, version, callback) {
 }
 
 // Returns { createdAt, message }
-function getCommit(token, project, commit_sha, callback) {
+function getCommit(token, project, commit_sha) {
     assert.strictEqual(typeof token, 'string');
     assert.strictEqual(typeof project, 'object');
     assert.strictEqual(typeof commit_sha, 'string');
-    assert.strictEqual(typeof callback, 'function');
 
     const octokit = buildOctokit(token);
 
     const [ owner, repo ] = project.name.split('/');
-    octokit.git.getCommit({ owner, repo, commit_sha }).then(function (result) {
-        callback(null, { createdAt: result.data.committer.date, message: result.data.message });
-    }, handleError(callback));
+
+    let result;
+    try {
+        result = octokit.git.getCommit({ owner, repo, commit_sha });
+    } catch (error) {
+        rethrow(error);
+    }
+
+    return {
+        createdAt:
+        result.data.committer.date,
+        message: result.data.message
+    };
 }

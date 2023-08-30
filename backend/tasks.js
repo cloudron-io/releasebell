@@ -102,7 +102,7 @@ async function syncProjects(callback) {
     }, callback);
 }
 
-function syncGithubStarredByUser(user, callback) {
+async function syncGithubStarredByUser(user, callback) {
     assert.strictEqual(typeof user, 'object');
     assert.strictEqual(typeof callback, 'function');
 
@@ -110,52 +110,55 @@ function syncGithubStarredByUser(user, callback) {
 
     debug('syncGithubStarredByUser: ', user.id);
 
-    github.getStarred(user.githubToken, async function (error, result) {
-        if (error) return callback(error);
+    let result;
+    try {
+        result = await github.getStarred(user.githubToken);
+    } catch (error) {
+        return callback(error);
+    }
 
-        debug(`syncGithubStarredByUser: found ${result.length} starred repos`);
+    debug(`syncGithubStarredByUser: found ${result.length} starred repos`);
 
-        // translate from github to internal model
-        const starredProjects = result.map(function (p) { return { name: p.full_name }; });
+    // translate from github to internal model
+    const starredProjects = result.map(function (p) { return { name: p.full_name }; });
 
-        let trackedProjects;
-        try {
-            trackedProjects = await database.projects.listByType(user.id, database.PROJECT_TYPE_GITHUB);
-        } catch (error) {
-            return callback(error);
-        }
+    let trackedProjects;
+    try {
+        trackedProjects = await database.projects.listByType(user.id, database.PROJECT_TYPE_GITHUB);
+    } catch (error) {
+        return callback(error);
+    }
 
-        const newProjects = starredProjects.filter(function (a) { return !trackedProjects.find(function (b) { return a.name === b.name; }); });
-        const outdatedProjects = trackedProjects.filter(function (a) { return !starredProjects.find(function (b) { return a.name === b.name; }); });
+    const newProjects = starredProjects.filter(function (a) { return !trackedProjects.find(function (b) { return a.name === b.name; }); });
+    const outdatedProjects = trackedProjects.filter(function (a) { return !starredProjects.find(function (b) { return a.name === b.name; }); });
 
-        debug(`syncGithubStarredByUser: new projects: ${newProjects.length} outdated projects: ${outdatedProjects.length}`);
+    debug(`syncGithubStarredByUser: new projects: ${newProjects.length} outdated projects: ${outdatedProjects.length}`);
 
-        // do not overwhelm github api with async.each() we hit rate limits if we do
-        async.eachSeries(newProjects, function (project, callback) {
-            debug(`syncGithubStarredByUser: [${project.name}] is new for user ${user.id}`);
+    // do not overwhelm github api with async.each() we hit rate limits if we do
+    async.eachSeries(newProjects, function (project, callback) {
+        debug(`syncGithubStarredByUser: [${project.name}] is new for user ${user.id}`);
 
-            // we add projects first with release notification disabled
-            database.projects.add({ type: database.PROJECT_TYPE_GITHUB, userId: user.id, name: project.name }, function (error, result) {
-                if (error) return callback(error);
-
-                // force an initial release sync
-                syncReleasesByProject(user, result, callback);
-            });
-        }, async function (error) {
+        // we add projects first with release notification disabled
+        database.projects.add({ type: database.PROJECT_TYPE_GITHUB, userId: user.id, name: project.name }, function (error, result) {
             if (error) return callback(error);
 
-            for (let project of outdatedProjects) {
-                debug(`syncGithubStarredByUser: [${project.name}] not starred anymore by ${user.id}`);
-
-                try {
-                    await database.projects.remove(project.id);
-                } catch (error) {
-                    console.error(`Failed to remove outdated project ${project.name} for ${user.id}`, error);
-                }
-            }
-
-            callback();
+            // force an initial release sync
+            syncReleasesByProject(user, result, callback);
         });
+    }, async function (error) {
+        if (error) return callback(error);
+
+        for (let project of outdatedProjects) {
+            debug(`syncGithubStarredByUser: [${project.name}] not starred anymore by ${user.id}`);
+
+            try {
+                await database.projects.remove(project.id);
+            } catch (error) {
+                console.error(`Failed to remove outdated project ${project.name} for ${user.id}`, error);
+            }
+        }
+
+        callback();
     });
 }
 
@@ -213,36 +216,39 @@ function syncReleasesByProject(user, project, callback) {
                 })();
             }
 
-            api.getReleaseBody(user.githubToken, project, release.version, function (error, result) {
+            api.getReleaseBody(user.githubToken, project, release.version, async function (error, result) {
                 if (error) console.error(`Failed to get release body for ${project.name} ${release.version}. Falling back to commit message.`, error);
 
                 release.body = result || '';
 
-                api.getCommit(user.githubToken, project, release.sha, async function (error, commit) {
-                    if (error) return callback(error);
+                let commit;
+                try {
+                    commit = api.getCommit(user.githubToken, project, release.sha);
+                } catch (error) {
+                    return callback(error);
+                }
 
-                    release.createdAt = new Date(commit.createdAt).getTime();
-                    // old code did not get all tags properly. this hack limits notifications to last 10 days
-                    if (Date.now() - release.createdAt > 10 * 24 * 60 * 60 * 1000) release.notified = true;
+                release.createdAt = new Date(commit.createdAt).getTime();
+                // old code did not get all tags properly. this hack limits notifications to last 10 days
+                if (Date.now() - release.createdAt > 10 * 24 * 60 * 60 * 1000) release.notified = true;
 
-                    debug(`syncReleasesByProject: [${project.name}] add release ${release.version} notified ${release.notified}`);
+                debug(`syncReleasesByProject: [${project.name}] add release ${release.version} notified ${release.notified}`);
 
-                    if (!release.body) {
-                        // Set fallback body to the commit's message
-                        const fullBody = 'Latest commit message: \n' + commit.message;
-                        const releaseBody = fullBody.length > 1000 ? fullBody.substring(0, 1000) + '...' : fullBody;
-                        release.body = releaseBody;
-                    }
+                if (!release.body) {
+                    // Set fallback body to the commit's message
+                    const fullBody = 'Latest commit message: \n' + commit.message;
+                    const releaseBody = fullBody.length > 1000 ? fullBody.substring(0, 1000) + '...' : fullBody;
+                    release.body = releaseBody;
+                }
 
-                    let result;
-                    try {
-                        result = await database.releases.add(release);
-                    } catch (error) {
-                        return callback(error);
-                    }
+                let finalRelease;
+                try {
+                    finalRelease = await database.releases.add(release);
+                } catch (error) {
+                    return callback(error);
+                }
 
-                    callback(null, result);
-                });
+                callback(null, finalRelease);
             });
         }, async function (error) {
             if (error) return callback(error);
