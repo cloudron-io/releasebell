@@ -88,19 +88,16 @@ async function projectsListByType(userId, type) {
     return result;
 }
 
-// TODO needs asyncification in tasks.js syncGithubStarredByUser
-function projectsAdd(project, callback) {
+async function projectsAdd(project) {
     assert.strictEqual(typeof project, 'object');
-    assert.strictEqual(typeof callback, 'function');
 
     project.id = uuid.v4();
     project.enabled = true;
     project.lastSuccessfulSyncAt = 0;
 
-    db.query('INSERT INTO projects SET ?', project, function (error) {
-        if (error) return callback(error);
-        callback(null, projectPostprocess(project));
-    });
+    dbPromise.query('INSERT INTO projects SET ?', project);
+
+    return projectPostprocess(project);
 }
 
 async function projectsGet(projectId) {

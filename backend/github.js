@@ -90,27 +90,33 @@ async function getStarred(token) {
 }
 
 // Returns [{ projectId, version, createdAt, sha, body }]
-function getReleases(token, project, callback) {
+async function getReleases(token, project) {
     assert.strictEqual(typeof token, 'string');
     assert.strictEqual(typeof project, 'object');
-    assert.strictEqual(typeof callback, 'function');
 
     const octokit = buildOctokit(token);
 
     const [ owner, repo ] = project.name.split('/');
-    octokit.paginate(octokit.repos.listTags, { owner, repo, per_page: 100 }).then(function (result) { // tags have no created_at field
-        const releases = result.map(function (r) {
-            return {
-                projectId: project.id,
-                version: r.name,
-                createdAt: null,
-                sha: r.commit.sha,
-                body: '' // will be filled later to avoid fetchin all releases all the time
-            };
-        });
 
-        callback(null, releases);
-    }, handleError(callback));
+    let result;
+    try {
+        result = await octokit.paginate(octokit.repos.listTags, { owner, repo, per_page: 100 });
+    } catch (error) {
+        rethrow(error);
+    }
+
+    // tags have no created_at field
+    const releases = result.map(function (r) {
+        return {
+            projectId: project.id,
+            version: r.name,
+            createdAt: null,
+            sha: r.commit.sha,
+            body: '' // will be filled later to avoid fetchin all releases all the time
+        };
+    });
+
+    return releases;
 }
 
 async function getReleaseBody(token, project, version) {

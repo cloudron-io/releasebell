@@ -138,13 +138,18 @@ async function syncGithubStarredByUser(user, callback) {
     async.eachSeries(newProjects, function (project, callback) {
         debug(`syncGithubStarredByUser: [${project.name}] is new for user ${user.id}`);
 
-        // we add projects first with release notification disabled
-        database.projects.add({ type: database.PROJECT_TYPE_GITHUB, userId: user.id, name: project.name }, function (error, result) {
-            if (error) return callback(error);
+        (async function () {
+            // we add projects first with release notification disabled
+            let result;
+            try {
+                result = database.projects.add({ type: database.PROJECT_TYPE_GITHUB, userId: user.id, name: project.name });
+            } catch (error) {
+                return callback(error);
+            }
 
             // force an initial release sync
             syncReleasesByProject(user, result, callback);
-        });
+        })();
     }, async function (error) {
         if (error) return callback(error);
 
@@ -162,7 +167,7 @@ async function syncGithubStarredByUser(user, callback) {
     });
 }
 
-function syncReleasesByProject(user, project, callback) {
+async function syncReleasesByProject(user, project, callback) {
     assert.strictEqual(typeof user, 'object');
     assert.strictEqual(typeof project, 'object');
     assert.strictEqual(typeof callback, 'function');
@@ -181,65 +186,70 @@ function syncReleasesByProject(user, project, callback) {
         return callback();
     }
 
-    api.getReleases(user.githubToken, project, async function (error, upstreamReleases) {
-        if (error) return callback(error);
+    let upstreamReleases;
+    try {
+        upstreamReleases = await api.getReleases(user.githubToken, project);
+    } catch (error) {
+        return callback(error);
+    }
 
-        let trackedReleases;
-        try {
-            trackedReleases = await database.releases.list(project.id);
-        } catch (error) {
-            return callback(error);
-        }
+    let trackedReleases;
+    try {
+        trackedReleases = await database.releases.list(project.id);
+    } catch (error) {
+        return callback(error);
+    }
 
-        const newReleases = upstreamReleases.filter(function (a) { return !trackedReleases.find(function (b) { return a.version == b.version; }); });
+    const newReleases = upstreamReleases.filter(function (a) { return !trackedReleases.find(function (b) { return a.version == b.version; }); });
 
-        debug(`syncReleasesByProject: [${project.name}] found ${newReleases.length} new releases`);
+    debug(`syncReleasesByProject: [${project.name}] found ${newReleases.length} new releases`);
 
-        // only get the full commit for new releases
-        for (let release of newReleases) {
-            // before initial successful sync and if notifications for this project are enabled, we mark the release as not notified yet
-            release.notified = !project.lastSuccessfulSyncAt ? true : !project.enabled;
-            release.body = '';
-            release.createdAt = 0;
+    // only get the full commit for new releases
+    for (let release of newReleases) {
+        // before initial successful sync and if notifications for this project are enabled, we mark the release as not notified yet
+        release.notified = !project.lastSuccessfulSyncAt ? true : !project.enabled;
+        release.body = '';
+        release.createdAt = 0;
 
-            // skip fetching details for notification which will not be sent
-            if (release.notified) {
-                await database.releases.add(release);
-                continue;
-            }
-
-            let result;
-            try {
-                result = await api.getReleaseBody(user.githubToken, project, release.version);
-            } catch (error) {
-                console.error(`Failed to get release body for ${project.name} ${release.version}. Falling back to commit message.`, error);
-            }
-
-            release.body = result || '';
-
-            const commit = api.getCommit(user.githubToken, project, release.sha);
-
-            release.createdAt = new Date(commit.createdAt).getTime();
-            // old code did not get all tags properly. this hack limits notifications to last 10 days
-            if (Date.now() - release.createdAt > 10 * 24 * 60 * 60 * 1000) release.notified = true;
-
-            debug(`syncReleasesByProject: [${project.name}] add release ${release.version} notified ${release.notified}`);
-
-            if (!release.body) {
-                // Set fallback body to the commit's message
-                const fullBody = 'Latest commit message: \n' + commit.message;
-                const releaseBody = fullBody.length > 1000 ? fullBody.substring(0, 1000) + '...' : fullBody;
-                release.body = releaseBody;
-            }
-
+        // skip fetching details for notification which will not be sent
+        if (release.notified) {
             await database.releases.add(release);
+            continue;
         }
 
-        debug(`syncReleasesByProject: [${project.name}] successfully synced`);
+        let result;
+        try {
+            result = await api.getReleaseBody(user.githubToken, project, release.version);
+        } catch (error) {
+            console.error(`Failed to get release body for ${project.name} ${release.version}. Falling back to commit message.`, error);
+        }
 
-        // set the last successful sync time
-        await database.projects.update(project.id, { lastSuccessfulSyncAt: Date.now() });
-    });
+        release.body = result || '';
+
+        const commit = api.getCommit(user.githubToken, project, release.sha);
+
+        release.createdAt = new Date(commit.createdAt).getTime();
+        // old code did not get all tags properly. this hack limits notifications to last 10 days
+        if (Date.now() - release.createdAt > 10 * 24 * 60 * 60 * 1000) release.notified = true;
+
+        debug(`syncReleasesByProject: [${project.name}] add release ${release.version} notified ${release.notified}`);
+
+        if (!release.body) {
+            // Set fallback body to the commit's message
+            const fullBody = 'Latest commit message: \n' + commit.message;
+            const releaseBody = fullBody.length > 1000 ? fullBody.substring(0, 1000) + '...' : fullBody;
+            release.body = releaseBody;
+        }
+
+        await database.releases.add(release);
+    }
+
+    debug(`syncReleasesByProject: [${project.name}] successfully synced`);
+
+    // set the last successful sync time
+    await database.projects.update(project.id, { lastSuccessfulSyncAt: Date.now() });
+
+    callback();
 }
 
 async function syncReleasesByUser(user, callback) {

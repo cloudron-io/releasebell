@@ -119,15 +119,18 @@ async function projectAdd(req, res, next) {
         origin: req.body.origin
     };
 
-    database.projects.add(project, function (error, result) {
-        if (error) return next(new HttpError(500, error));
+    let result;
+    try {
+        result = await database.projects.add(project);
+    } catch (error) {
+        return next(new HttpError(500, error));
+    }
 
-        next(new HttpSuccess(201, { project: result }));
+    next(new HttpSuccess(201, { project: result }));
 
-        // force an initial release sync
-        tasks.syncReleasesByProject(req.user, result, function (error) {
-            if (error) console.error('Failed to perfom initial sync.', error);
-        });
+    // force an initial release sync
+    tasks.syncReleasesByProject(req.user, result, function (error) {
+        if (error) console.error('Failed to perfom initial sync.', error);
     });
 }
 
