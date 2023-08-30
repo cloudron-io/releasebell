@@ -95,7 +95,8 @@ async function projectsAdd(project) {
     project.enabled = true;
     project.lastSuccessfulSyncAt = 0;
 
-    dbPromise.query('INSERT INTO projects SET ?', project);
+    dbPromise.query('INSERT INTO projects (id, userId, name, origin, enabled, lastSuccessfulSyncAt, type) VALUES (?,?,?,?,?,?,?)',
+        [ project.id, project.userId, project.name, project.origin, project.enabled, project.lastSuccessfulSyncAt, project.type ]);
 
     return projectPostprocess(project);
 }
@@ -132,7 +133,8 @@ async function usersList() {
 async function usersAdd(user) {
     assert.strictEqual(typeof user, 'object');
 
-    await dbPromise.query('INSERT INTO users SET ?', user);
+    await dbPromise.query('INSERT INTO users (id, email, githubToken) VALUES (?, ?, ?)',
+        [ user.id, user.email, user.githubToken ]);
 
     return user;
 }
@@ -166,10 +168,8 @@ async function releasesAdd(release) {
 
     release.id = uuid.v4();
 
-    // don't store
-    delete release.sha;
-
-    await dbPromise.query('INSERT INTO releases SET ?', release);
+    await dbPromise.query('INSERT INTO releases (id, projectId, version, body, notified, createdAt) VALUES (?, ?, ?, ?, ?, ?)',
+        [ release.id, release.projectId, release.version, release.body, release.notified, release.createdAt ]);
 
     return release;
 }
