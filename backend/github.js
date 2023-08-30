@@ -38,19 +38,6 @@ function buildOctokit(token) {
 }
 
 // translate some api errors
-function handleError(callback) {
-    return function (error) {
-        if (error) {
-            if (error.status === 403 && error.message.indexOf('API rate limit exceeded') === 0) {
-                error.message = 'GitHub rate limit exceeded. Please wait a bit.';
-                error.retryAt = error.response.headers['x-ratelimit-reset'] ? parseInt(error.response.headers['x-ratelimit-reset'])*1000 : 0;
-            }
-        }
-
-        callback(error);
-    };
-}
-
 function rethrow(error) {
     if (error.status === 403 && error.message.indexOf('API rate limit exceeded') === 0) {
         error.message = 'GitHub rate limit exceeded. Please wait a bit.';

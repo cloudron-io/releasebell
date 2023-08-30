@@ -50,127 +50,102 @@ function shuffleArray(arr) {
     }
 }
 
-function run() {
+async function run() {
     if (gTasksActive) return debug('run: already running');
 
     gTasksActive = true;
 
     debug('run: start');
 
-    syncProjects(function (error) {
-        if (error) console.error(error);
-
-        syncReleases(function (error) {
-            if (error) console.error(error);
-
-            sendNotifications(function (error) {
-                if (error) console.error(error);
-
-                // just keep polling for good every hour otherwise whenever github tells us we can try again + 60sec
-                const nextRun = gRetryAt ? ((60*1000) + (gRetryAt - Date.now())) : (60 * 60 * 1000);
-
-                gRetryAt = 0;
-                gTasksActive = false;
-
-                debug(`run: done. Next run in ${nextRun/1000}s at ${new Date(nextRun + Date.now())}`);
-
-                setTimeout(run, nextRun);
-            });
-        });
-    });
-}
-
-async function syncProjects(callback) {
-    assert.strictEqual(typeof callback, 'function');
-
-    let list;
     try {
-        list = await database.users.list();
+        await syncProjects();
     } catch (error) {
-        return callback(error);
+        console.error('Failed to sync projects', error);
     }
 
-    shuffleArray(list);
+    try {
+        await syncReleases();
+    } catch (error) {
+        console.error('Failed to sync releases', error);
+    }
 
-    async.each(list, function (user, callback) {
-        // errors are ignored here
-        syncGithubStarredByUser(user, function (error) {
-            if (error) console.error(error);
+    try {
+        await sendNotifications();
+    } catch (error) {
+        console.error('Failed to send notifications', error);
+    }
 
-            callback();
-        });
-    }, callback);
+    // just keep polling for good every hour otherwise whenever github tells us we can try again + 60sec
+    const nextRun = gRetryAt ? ((60*1000) + (gRetryAt - Date.now())) : (60 * 60 * 1000);
+
+    gRetryAt = 0;
+    gTasksActive = false;
+
+    debug(`run: done. Next run in ${nextRun/1000}s at ${new Date(nextRun + Date.now())}`);
+
+    setTimeout(run, nextRun);
 }
 
-async function syncGithubStarredByUser(user, callback) {
-    assert.strictEqual(typeof user, 'object');
-    assert.strictEqual(typeof callback, 'function');
+async function syncProjects() {
+    const users = await database.users.list();
 
-    if (!user.githubToken) return callback();
+    shuffleArray(users);
+
+    // errors are ignored here
+    for (let user of users) {
+        try {
+            await syncGithubStarredByUser(user);
+        } catch (error) {
+            console.error(error);
+        }
+    }
+}
+
+async function syncGithubStarredByUser(user) {
+    assert.strictEqual(typeof user, 'object');
+
+    if (!user.githubToken) return '';
 
     debug('syncGithubStarredByUser: ', user.id);
 
-    let result;
-    try {
-        result = await github.getStarred(user.githubToken);
-    } catch (error) {
-        return callback(error);
-    }
+    const result = await github.getStarred(user.githubToken);
 
     debug(`syncGithubStarredByUser: found ${result.length} starred repos`);
 
     // translate from github to internal model
     const starredProjects = result.map(function (p) { return { name: p.full_name }; });
 
-    let trackedProjects;
-    try {
-        trackedProjects = await database.projects.listByType(user.id, database.PROJECT_TYPE_GITHUB);
-    } catch (error) {
-        return callback(error);
-    }
+    const trackedProjects = await database.projects.listByType(user.id, database.PROJECT_TYPE_GITHUB);
 
     const newProjects = starredProjects.filter(function (a) { return !trackedProjects.find(function (b) { return a.name === b.name; }); });
     const outdatedProjects = trackedProjects.filter(function (a) { return !starredProjects.find(function (b) { return a.name === b.name; }); });
 
     debug(`syncGithubStarredByUser: new projects: ${newProjects.length} outdated projects: ${outdatedProjects.length}`);
 
-    // do not overwhelm github api with async.each() we hit rate limits if we do
-    async.eachSeries(newProjects, function (project, callback) {
+    for (let project of newProjects) {
         debug(`syncGithubStarredByUser: [${project.name}] is new for user ${user.id}`);
 
-        (async function () {
-            // we add projects first with release notification disabled
-            let result;
-            try {
-                result = database.projects.add({ type: database.PROJECT_TYPE_GITHUB, userId: user.id, name: project.name });
-            } catch (error) {
-                return callback(error);
-            }
+        // we add projects first with release notification disabled
+        const result = database.projects.add({ type: database.PROJECT_TYPE_GITHUB, userId: user.id, name: project.name });
 
-            // force an initial release sync
-            syncReleasesByProject(user, result, callback);
-        })();
-    }, async function (error) {
-        if (error) return callback(error);
+        // force an initial release sync
+        await syncReleasesByProject(user, result);
+    }
 
-        for (let project of outdatedProjects) {
-            debug(`syncGithubStarredByUser: [${project.name}] not starred anymore by ${user.id}`);
+    for (let project of outdatedProjects) {
+        debug(`syncGithubStarredByUser: [${project.name}] not starred anymore by ${user.id}`);
 
-            try {
-                await database.projects.remove(project.id);
-            } catch (error) {
-                console.error(`Failed to remove outdated project ${project.name} for ${user.id}`, error);
-            }
+        try {
+            await database.projects.remove(project.id);
+        } catch (error) {
+            console.error(`Failed to remove outdated project ${project.name} for ${user.id}`, error);
         }
-
-        callback();
-    });
+    }
 }
 
-async function syncReleasesByProject(user, project, callback) {
+async function syncReleasesByProject(user, project) {
     assert.strictEqual(typeof user, 'object');
     assert.strictEqual(typeof project, 'object');
-    assert.strictEqual(typeof callback, 'function');
 
     debug(`syncReleasesByProject: [${project.name}] type ${project.type} start sync releases. Last successful sync was at`, new Date(project.lastSuccessfulSyncAt));
 
@@ -183,22 +158,11 @@ async function syncReleasesByProject(user, project, callback) {
         api = gitlab;
     } else {
         debug(`syncReleasesByProject: [${project.name}] unknown type ${project.type}. Ignoring for now`);
-        return callback();
+        return;
     }
 
-    let upstreamReleases;
-    try {
-        upstreamReleases = await api.getReleases(user.githubToken, project);
-    } catch (error) {
-        return callback(error);
-    }
-
-    let trackedReleases;
-    try {
-        trackedReleases = await database.releases.list(project.id);
-    } catch (error) {
-        return callback(error);
-    }
+    const upstreamReleases = await api.getReleases(user.githubToken, project);
+    const trackedReleases = await database.releases.list(project.id);
 
     const newReleases = upstreamReleases.filter(function (a) { return !trackedReleases.find(function (b) { return a.version == b.version; }); });
 
@@ -248,73 +212,44 @@ async function syncReleasesByProject(user, project, callback) {
 
     // set the last successful sync time
     await database.projects.update(project.id, { lastSuccessfulSyncAt: Date.now() });
-
-    callback();
 }
 
-async function syncReleasesByUser(user, callback) {
+async function syncReleasesByUser(user) {
     assert.strictEqual(typeof user, 'object');
-    assert.strictEqual(typeof callback, 'function');
 
-    let projects;
-    try {
-        projects = await database.projects.list(user.id);
-    } catch (error) {
-        return callback(error);
-    }
+    const projects = await database.projects.list(user.id);
 
     shuffleArray(projects);
 
-    async.eachSeries(projects, function (project, callback) {
-        syncReleasesByProject(user, project, callback);
-    }, callback);
-}
-
-async function syncReleases(callback) {
-    assert.strictEqual(typeof callback, 'function');
-
-    let list;
-    try {
-        list = await database.users.list();
-    } catch (error) {
-        return callback(error);
+    for (let project of projects) {
+        await syncReleasesByProject(user, project);
     }
-
-    shuffleArray(list);
-
-    async.eachSeries(list, function (user, callback) {
-        syncReleasesByUser(user, function (error) {
-            if (error) console.error(error);
-            if (error && error.retryAt) gRetryAt = error.retryAt;
-
-            // errors are ignored here
-            callback();
-        });
-    }, callback);
 }
 
-async function sendNotificationEmail(release, callback) {
+async function syncReleases() {
+    const users = await database.users.list();
+
+    shuffleArray(users);
+
+    for (let user of users) {
+        try {
+            await syncReleasesByUser(user);
+        } catch (error) {
+            console.error(`Failed to get releases for user ${user.id}. Continuing...`, error);
+        }
+    }
+}
+
+async function sendNotificationEmail(release) {
     assert.strictEqual(typeof release, 'object');
-    assert.strictEqual(typeof callback, 'function');
 
     if (!CAN_SEND_EMAIL) {
         console.log('Would send email for release', release);
-        return callback();
+        return;
     }
 
-    let project;
-    try {
-        project = await database.projects.get(release.projectId);
-    } catch (error) {
-        return callback(error);
-    }
-
-    let user;
-    try {
-        user = database.users.get(project.userId);
-    } catch (error) {
-        return callback(error);
-    }
+    const project = await database.projects.get(release.projectId);
+    const user = database.users.get(project.userId);
 
     const transport = nodemailer.createTransport(smtpTransport({
         host: process.env.CLOUDRON_MAIL_SMTP_SERVER,
@@ -341,35 +276,19 @@ async function sendNotificationEmail(release, callback) {
         html: EMAIL_TEMPLATE({ project: project, release: release, versionLink: versionLink, settingsLink: settingsLink })
     };
 
-    transport.sendMail(mail, async function (error) {
-        if (error) return callback(error);
-
-        try {
-            await database.releases.update(release.id, { notified: true });
-        } catch (error) {
-            return callback(error);
-        }
-
-        callback(null);
-    });
+    await transport.sendMail(mail);
+    await database.releases.update(release.id, { notified: true });
 }
 
-async function sendNotifications(callback) {
-    assert.strictEqual(typeof callback, 'function');
+async function sendNotifications() {
+    const result = await database.releases.listAllPending();
 
-    let result;
-    try {
-        result = await database.releases.listAllPending();
-    } catch (error) {
-        return callback(error);
+    // ignore individual errors
+    for (let release of result) {
+        try {
+            await sendNotificationEmail(release);
+        } catch (error) {
+            console.error(`Failed to send notification email for release ${release.projectId}/${release.version}`, error);
+        }
     }
-
-    async.eachSeries(result, function (release, callback) {
-        sendNotificationEmail(release, function (error) {
-            if (error) console.error(error);
-
-            // ignore individual errors
-            callback();
-        });
-    }, callback);
 }

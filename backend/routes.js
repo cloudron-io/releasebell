@@ -129,9 +129,11 @@ async function projectAdd(req, res, next) {
     next(new HttpSuccess(201, { project: result }));
 
     // force an initial release sync
-    tasks.syncReleasesByProject(req.user, result, function (error) {
-        if (error) console.error('Failed to perfom initial sync.', error);
-    });
+    try {
+        await tasks.syncReleasesByProject(req.user, result);
+    } catch (error) {
+        console.error('Failed to perfom initial sync.', error);
+    }
 }
 
 async function projectsGet(req, res, next) {
