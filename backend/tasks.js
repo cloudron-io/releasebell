@@ -192,7 +192,7 @@ async function syncReleasesByProject(user, project) {
 
         const commit = api.getCommit(user.githubToken, project, release.sha);
 
-        release.createdAt = new Date(commit.createdAt).getTime();
+        release.createdAt = new Date(commit.createdAt).getTime() | 0;
         // old code did not get all tags properly. this hack limits notifications to last 10 days
         if (Date.now() - release.createdAt > 10 * 24 * 60 * 60 * 1000) release.notified = true;
 

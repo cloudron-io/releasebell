@@ -167,6 +167,7 @@ async function releasesAdd(release) {
     assert.strictEqual(typeof release, 'object');
 
     release.id = uuid.v4();
+    release.createdAt = release.createdAt || 0;
 
     await dbPromise.query('INSERT INTO releases (id, projectId, version, body, notified, createdAt) VALUES (?, ?, ?, ?, ?, ?)',
         [ release.id, release.projectId, release.version, release.body, release.notified, release.createdAt ]);
