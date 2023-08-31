@@ -147,7 +147,7 @@ async function syncReleasesByProject(user, project) {
     assert.strictEqual(typeof user, 'object');
     assert.strictEqual(typeof project, 'object');
 
-    debug(`syncReleasesByProject: [${project.name}] type ${project.type} start sync releases. Last successful sync was at`, new Date(project.lastSuccessfulSyncAt));
+    debug(`syncReleasesByProject: [${project.name}] type ${project.type} start sync releases, notifications are ${project.enabled ? 'enabled' : 'disabled'}. Last successful sync was at`, new Date(project.lastSuccessfulSyncAt));
 
     var api;
     if (project.type === database.PROJECT_TYPE_GITHUB) {
@@ -190,13 +190,13 @@ async function syncReleasesByProject(user, project) {
 
         release.body = result || '';
 
-        const commit = api.getCommit(user.githubToken, project, release.sha);
+        const commit = await api.getCommit(user.githubToken, project, release.sha);
 
         release.createdAt = new Date(commit.createdAt).getTime() | 0;
         // old code did not get all tags properly. this hack limits notifications to last 10 days
         if (Date.now() - release.createdAt > 10 * 24 * 60 * 60 * 1000) release.notified = true;
 
-        debug(`syncReleasesByProject: [${project.name}] add release ${release.version} notified ${release.notified}`);
+        debug(`syncReleasesByProject: [${project.name}] add release ${release.version} from ${new Date(release.createdAt)} notified ${release.notified}`);
 
         if (!release.body) {
             // Set fallback body to the commit's message
