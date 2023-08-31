@@ -28,8 +28,8 @@ describe('Application life cycle test', function () {
     const TEST_TIMEOUT = 10000;
     const EXEC_ARGS = { cwd: path.resolve(__dirname, '..'), stdio: 'inherit' };
 
-    const username = process.env.USERNAME;
-    const password = process.env.PASSWORD;
+    const USERNAME = process.env.USERNAME;
+    const PASSWORD = process.env.PASSWORD;
     const ghToken = process.env.GITHUB_TOKEN;
 
     let browser, app;
@@ -48,38 +48,60 @@ describe('Application life cycle test', function () {
     }
 
     async function login() {
-        await browser.get('https://' + app.fqdn);
-        await visible(By.id('username'));
-        await browser.findElement(By.id('username')).sendKeys(username);
-        await browser.findElement(By.id('password')).sendKeys(password);
-        await browser.findElement(By.xpath('//button[@type="submit"]')).click();
-        await browser.wait(until.elementLocated(By.xpath('//*[contains(text(), " Welcome to Release Bell")]')), TEST_TIMEOUT);
-        await browser.sleep(3000);
+        await browser.manage().deleteAllCookies();
+        await browser.get(`https://${app.fqdn}`);
+
+        await visible(By.id('loginButton'));
+        await browser.findElement(By.id('loginButton')).click();
+
+        // some redirects later
+        await browser.sleep(2000);
+
+        // OIDC
+        if (await browser.findElements(By.xpath('//button[contains(text(), "Sign in using Cloudron")]')).then(found => !!found.length)) {
+            await browser.findElement(By.xpath('//button[contains(text(), "Sign in using Cloudron")]')).click();
+            await browser.sleep(2000);
+            await browser.findElement(By.xpath('//button[contains(text(), "Continue")]')).click();
+            await browser.sleep(2000);
+        }
+
+        if (await browser.findElements(By.xpath('//input[@name="username"]')).then(found => !!found.length)) {
+            await browser.findElement(By.xpath('//input[@name="username"]')).sendKeys(USERNAME);
+            await browser.findElement(By.xpath('//input[@name="password"]')).sendKeys(PASSWORD);
+            await browser.findElement(By.xpath('//button[@type="submit" and contains(text(), "Sign in")]')).click();
+            await browser.sleep(2000);
+        }
+
+        await visible(By.id('logoutButton'));
     }
 
     async function logout() {
         await browser.get('https://' + app.fqdn);
-        await browser.sleep(3000);
-        await visible(By.xpath('//li[contains(text(), "Logout")]'));
-        await browser.findElement(By.xpath('//li[contains(text(), "Logout")]')).click();
-        await browser.findElement(By.id('username')).sendKeys(username);
+        await visible(By.id('logoutButton'));
+        await browser.findElement(By.id('logoutButton')).click();
+        await visible(By.id('loginButton'));
     }
 
     async function setGithubToken() {
         await browser.get('https://' + app.fqdn);
-        await browser.sleep(3000);
-        await visible(By.xpath('//li[contains(text(), "Profile")]'));
-        await browser.findElement(By.xpath('//li[contains(text(), "Profile")]')).click();
-        await browser.findElement(By.id('githubToken')).sendKeys(ghToken);
-        await browser.findElement(By.id('saveProfile')).click();
+
+        await visible(By.id('settingsButton'));
+        await visible(By.id('settingsButton'));
+
+        await visible(By.id('githubTokenInput'));
+        await browser.findElement(By.id('githubTokenInput')).sendKeys(ghToken);
+
+        await browser.findElement(By.id('settingsSaveButton')).click();
+
         console.log('waiting for 5 minutes for syncing');
+
         await browser.sleep(5 * 60 * 1000);
     }
 
     async function checkProjects() {
         await browser.get('https://' + app.fqdn);
         await browser.sleep(3000);
-        await browser.findElement(By.xpath('//a[@href="https://github.com/cloudron-io/surfer"]'));
+        await browser.wait(until.elementLocated(By.xpath('//a[@href="https://github.com/cloudron-io/surfer"]')), TEST_TIMEOUT);
     }
 
     function getAppInfo() {

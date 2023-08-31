@@ -44,7 +44,7 @@
         </form>
         <template #footer>
           <Button label="Cancel" icon="pi pi-times" class="p-button-text" @click="settingsDialog.visible = false"/>
-          <Button label="Save" :icon="settingsDialog.busy ? 'pi pi-spin pi-spinner' : 'pi pi-check'" :disabled="!settingsDialog.githubToken || settingsDialog.busy" class="p-button-text p-button-success" @click="onSettingsSubmit()"/>
+          <Button label="Save" id="settingsSaveButton" :icon="settingsDialog.busy ? 'pi pi-spin pi-spinner' : 'pi pi-check'" :disabled="!settingsDialog.githubToken || settingsDialog.busy" class="p-button-text p-button-success" @click="onSettingsSubmit()"/>
         </template>
       </Dialog>
     </template>
@@ -57,9 +57,9 @@
           <Button aria-label="Refresh" text icon="pi pi-refresh" :loading="refreshBusy" @click="refresh()"/>
         </template>
         <template #right>
-          <Button class="p-button-sm" style="margin-right: 10px" severity="primary" icon="pi pi-plus" label="Add Project" @click="onShowAddProjectDialog()"/>
-          <Button class="p-button-sm" style="margin-right: 10px" severity="primary" icon="pi pi-cog" label="Settings" @click="onShowSettingsDialog()"/>
-          <Button class="p-button-sm" severity="secondary" icon="pi pi-sign-out" label="Logout" @click="onLogout()"/>
+          <Button class="p-button-sm" id="addProjectButton" style="margin-right: 10px" severity="primary" icon="pi pi-plus" label="Add Project" @click="onShowAddProjectDialog()"/>
+          <Button class="p-button-sm" id="settingsButton" style="margin-right: 10px" severity="primary" icon="pi pi-cog" label="Settings" @click="onShowSettingsDialog()"/>
+          <Button class="p-button-sm" id="logoutButton" severity="secondary" icon="pi pi-sign-out" label="Logout" @click="onLogout()"/>
         </template>
       </TopBar>
     </template>
