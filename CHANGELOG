@@ -81,3 +81,7 @@
 [1.7.9]
 * Improve initial project sync
 
+[1.8.0]
+* Move to OpenID connect
+* Rewrite the UI to use primevue
+
