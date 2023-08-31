@@ -47,29 +47,18 @@ describe('Application life cycle test', function () {
         await browser.wait(until.elementIsVisible(browser.findElement(selector)), TEST_TIMEOUT);
     }
 
-    async function login() {
+    async function login(session = false) {
         await browser.manage().deleteAllCookies();
         await browser.get(`https://${app.fqdn}`);
 
         await visible(By.id('loginButton'));
         await browser.findElement(By.id('loginButton')).click();
 
-        // some redirects later
-        await browser.sleep(2000);
-
-        // OIDC
-        if (await browser.findElements(By.xpath('//button[contains(text(), "Sign in using Cloudron")]')).then(found => !!found.length)) {
-            await browser.findElement(By.xpath('//button[contains(text(), "Sign in using Cloudron")]')).click();
-            await browser.sleep(2000);
-            await browser.findElement(By.xpath('//button[contains(text(), "Continue")]')).click();
-            await browser.sleep(2000);
-        }
-
-        if (await browser.findElements(By.xpath('//input[@name="username"]')).then(found => !!found.length)) {
+        if (!session) {
+            await visible(By.xpath('//input[@name="username"]'));
             await browser.findElement(By.xpath('//input[@name="username"]')).sendKeys(USERNAME);
             await browser.findElement(By.xpath('//input[@name="password"]')).sendKeys(PASSWORD);
             await browser.findElement(By.xpath('//button[@type="submit" and contains(text(), "Sign in")]')).click();
-            await browser.sleep(2000);
         }
 
         await visible(By.id('logoutButton'));
@@ -77,8 +66,10 @@ describe('Application life cycle test', function () {
 
     async function logout() {
         await browser.get('https://' + app.fqdn);
+
         await visible(By.id('logoutButton'));
         await browser.findElement(By.id('logoutButton')).click();
+
         await visible(By.id('loginButton'));
     }
 
@@ -86,7 +77,7 @@ describe('Application life cycle test', function () {
         await browser.get('https://' + app.fqdn);
 
         await visible(By.id('settingsButton'));
-        await visible(By.id('settingsButton'));
+        await browser.findElement(By.id('settingsButton')).click();
 
         await visible(By.id('githubTokenInput'));
         await browser.findElement(By.id('githubTokenInput')).sendKeys(ghToken);
@@ -121,7 +112,8 @@ describe('Application life cycle test', function () {
     it('can logout', logout);
 
     it('restart app', function () { execSync('cloudron restart --app ' + app.id, EXEC_ARGS); });
-    it('can login', login);
+
+    it('can login', login.bind(null, true));
     it('can see projects', checkProjects);
     it('can logout', logout);
 
@@ -129,14 +121,14 @@ describe('Application life cycle test', function () {
 
     it('restore app', async function () {
         await browser.get('about:blank');
-        const backups = JSON.parse(execSync('cloudron backup list --raw'));
+        const backups = JSON.parse(execSync(`cloudron backup list --raw --app ${app.id}`));
         execSync('cloudron uninstall --app ' + app.id, EXEC_ARGS);
         execSync('cloudron install --location ' + LOCATION, EXEC_ARGS);
         getAppInfo();
         execSync(`cloudron restore --backup ${backups[0].id} --app ${app.id}`, EXEC_ARGS);
     });
 
-    it('can login', login);
+    it('can login', login.bind(null, true));
     it('can see projects', checkProjects);
     it('can logout', logout);
 
@@ -149,7 +141,7 @@ describe('Application life cycle test', function () {
         expect(app).to.be.an('object');
     });
 
-    it('can login', login);
+    it('can login', login.bind(null, true));
     it('can see projects', checkProjects);
     it('can logout', logout);
 
