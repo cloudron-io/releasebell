@@ -94,6 +94,7 @@ async function projectsAdd(project) {
     project.id = uuid.v4();
     project.enabled = true;
     project.lastSuccessfulSyncAt = 0;
+    project.origin = project.origin || '';
 
     dbPromise.query('INSERT INTO projects (id, userId, name, origin, enabled, lastSuccessfulSyncAt, type) VALUES (?,?,?,?,?,?,?)',
         [ project.id, project.userId, project.name, project.origin, project.enabled, project.lastSuccessfulSyncAt, project.type ]);

@@ -126,7 +126,7 @@ async function syncGithubStarredByUser(user) {
         debug(`syncGithubStarredByUser: [${project.name}] is new for user ${user.id}`);
 
         // we add projects first with release notification disabled
-        const result = database.projects.add({ type: database.PROJECT_TYPE_GITHUB, userId: user.id, name: project.name });
+        const result = await database.projects.add({ type: database.PROJECT_TYPE_GITHUB, userId: user.id, name: project.name });
 
         // force an initial release sync
         await syncReleasesByProject(user, result);
@@ -192,11 +192,11 @@ async function syncReleasesByProject(user, project) {
 
         const commit = await api.getCommit(user.githubToken, project, release.sha);
 
-        release.createdAt = new Date(commit.createdAt).getTime() | 0;
+        release.createdAt = new Date(commit.createdAt).getTime() || 0;
         // old code did not get all tags properly. this hack limits notifications to last 10 days
         if (Date.now() - release.createdAt > 10 * 24 * 60 * 60 * 1000) release.notified = true;
 
-        debug(`syncReleasesByProject: [${project.name}] add release ${release.version} from ${new Date(release.createdAt)} notified ${release.notified}`);
+        debug(`syncReleasesByProject: [${project.name}] add release ${release.version} from ${release.createdAt} as ${new Date(commit.createdAt)} notified ${release.notified}`);
 
         if (!release.body) {
             // Set fallback body to the commit's message
@@ -249,7 +249,7 @@ async function sendNotificationEmail(release) {
     }
 
     const project = await database.projects.get(release.projectId);
-    const user = database.users.get(project.userId);
+    const user = await database.users.get(project.userId);
 
     const transport = nodemailer.createTransport(smtpTransport({
         host: process.env.CLOUDRON_MAIL_SMTP_SERVER,
