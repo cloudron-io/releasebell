@@ -151,7 +151,7 @@ describe('Application life cycle test', function () {
     });
 
     // test update
-    it('can install app', function () { execSync(`cloudron install --appstore-id ${app.manifest.id} --location ${LOCATION}`, EXEC_ARGS); });
+    it('can install app', function () { execSync(`cloudron install --appstore-id io.cloudron.releasebell --location ${LOCATION}`, EXEC_ARGS); });
 
     it('can get app information', getAppInfo);
     it('can login', login);
@@ -165,7 +165,7 @@ describe('Application life cycle test', function () {
         expect(app).to.be.an('object');
     });
 
-    it('can login', login);
+    it('can login', login.bind(null, true));
     it('can see projects', checkProjects);
     it('can logout', logout);
 
