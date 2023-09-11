@@ -85,3 +85,6 @@
 * Move to OpenID connect
 * Rewrite the UI to use primevue
 
+[1.8.1]
+* Fix regression to remove unstarred github repos
+
