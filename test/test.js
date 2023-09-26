@@ -84,9 +84,9 @@ describe('Application life cycle test', function () {
 
         await browser.findElement(By.id('settingsSaveButton')).click();
 
-        console.log('waiting for 5 minutes for syncing');
+        console.log('waiting for 10 minutes for syncing');
 
-        await browser.sleep(5 * 60 * 1000);
+        await browser.sleep(10 * 60 * 1000);
     }
 
     async function checkProjects() {
