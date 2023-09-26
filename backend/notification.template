@@ -75,7 +75,7 @@
         {{/if}}
         <tr>
           <td style="padding-top: 20px; color: #606266; font-size: 16px;">
-            A new release {{ release.version }} for {{ project.name }} was published. Read more about this release on <a href="{{ versionLink }}">the release page</a>.
+            A new {{#if release.prerelease}}prerelease{{else}}release{{/if}} {{ release.version }} for {{ project.name }} was published. Read more about this release on <a href="{{ versionLink }}">the release page</a>.
           </td>
         </tr>
       </table>
