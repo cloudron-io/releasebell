@@ -88,3 +88,5 @@
 [1.8.1]
 * Fix regression to remove unstarred github repos
 
+[1.9.0]
+* Indicate a release is a prerelease
