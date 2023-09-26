@@ -1,17 +1,16 @@
 'use strict';
 
-var assert = require('assert'),
-    async = require('async'),
+const assert = require('assert'),
     fs = require('fs'),
-    path = require('path'),
     database = require('./database.js'),
-    nodemailer = require('nodemailer'),
+    debug = require('debug')('releasebell/tasks'),
+    github = require('./github.js'),
+    gitlab = require('./gitlab.js'),
     handlebars = require('handlebars'),
     markdown = require('helper-markdown'),
-    debug = require('debug')('releasebell/tasks'),
-    smtpTransport = require('nodemailer-smtp-transport'),
-    gitlab = require('./gitlab.js'),
-    github = require('./github.js');
+    nodemailer = require('nodemailer'),
+    path = require('path'),
+    smtpTransport = require('nodemailer-smtp-transport');
 
 // Register our Markdown helper
 handlebars.registerHelper('markdown', function(text) {
@@ -20,8 +19,8 @@ handlebars.registerHelper('markdown', function(text) {
 });
 
 module.exports = exports = {
-    run: run,
-    syncReleasesByProject: syncReleasesByProject // for initial sync on project add
+    run,
+    syncReleasesByProject // for initial sync on project add
 };
 
 const CAN_SEND_EMAIL = (process.env.CLOUDRON_MAIL_SMTP_SERVER && process.env.CLOUDRON_MAIL_SMTP_PORT && process.env.CLOUDRON_MAIL_FROM);
