@@ -1,6 +1,6 @@
 'use strict';
 
-var assert = require('assert'),
+const assert = require('assert'),
     { Octokit } = require('@octokit/rest'),
     { retry } = require('@octokit/plugin-retry'),
     { throttling } = require('@octokit/plugin-throttling');
@@ -9,7 +9,7 @@ module.exports = exports = {
     verifyToken,
     getStarred,
     getReleases,
-    getReleaseBody,
+    getRelease,
     getCommit
 };
 
@@ -106,7 +106,7 @@ async function getReleases(token, project) {
     return releases;
 }
 
-async function getReleaseBody(token, project, version) {
+async function getRelease(token, project, version) {
     assert.strictEqual(typeof token, 'string');
     assert.strictEqual(typeof project, 'object');
     assert.strictEqual(typeof version, 'string');
@@ -124,11 +124,10 @@ async function getReleaseBody(token, project, version) {
         rethrow(error);
     }
 
-    if (!release.data.body) return '';
+    if (!release.data.body) return { body: '', prerelease: false };
 
-    const fullBody = release.data.body.replace(/\r\n/g, '\n');
-
-    return fullBody.length > 1000 ? fullBody.substring(0, 1000) + '...' : fullBody;
+    let body = release.data.body.replace(/\r\n/g, '\n');
+    return { body, prerelease: release.data.prerelease };
 }
 
 // Returns { createdAt, message }

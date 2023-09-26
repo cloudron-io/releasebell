@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS releases(
     version VARCHAR(512) NOT NULL,
     body TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
     notified BOOLEAN DEFAULT false,
+    prereleases BOOLEAN DEFAULT false,
     createdAt BIGINT NOT NULL,
 
     FOREIGN KEY(projectId) REFERENCES projects(id),

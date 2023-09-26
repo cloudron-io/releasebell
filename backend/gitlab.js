@@ -1,13 +1,13 @@
 'use strict';
 
-var assert = require('assert'),
+const assert = require('assert'),
     superagent = require('superagent');
 
 module.exports = exports = {
     verifyToken,
     getStarred,
     getReleases,
-    getReleaseBody,
+    getRelease,
     getCommit
 };
 
@@ -54,12 +54,12 @@ async function getReleases(token, project) {
     return releaseObjects;
 }
 
-function getReleaseBody(token, project, version) {
+function getRelease(token, project, version) {
     assert.strictEqual(typeof token, 'string');
     assert.strictEqual(typeof project, 'object');
     assert.strictEqual(typeof version, 'string');
 
-    return '';
+    return { body: '', prerelease: false };
 }
 
 // Returns { createdAt, message }

@@ -46,7 +46,11 @@
 
 <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="border: 0; padding: 20px; font-family: Helvetica, sans-serif;">
   <tr>
+    {{#if release.prerelease}}
     <td align="center" class="header" style="padding: 40px 0 30px 0; background-color: #409eff; border-radius: 4px; font-size: 20px;">
+    {{else}}
+    <td align="center" class="header" style="padding: 40px 0 30px 0; background-color: #bf4c24; border-radius: 4px; font-size: 20px;">
+    {{/if}}
         <a href="{{ versionLink }}" style="color: #fff;">{{ project.name }}</a>
     </td>
   </tr>
@@ -55,7 +59,11 @@
       <table border="0" cellpadding="0" cellspacing="0" width="100%">
         <tr>
           <td>
-            <a href="{{ versionLink }}" style="color: #606266;">{{ release.version }}</a>
+            <a href="{{ versionLink }}" style="color: #606266;">{{ release.version }}
+            {{#if release.prerelease}}
+              &nbsp; (prerelease)
+            {{/if}}
+            </a>
           </td>
         </tr>
         {{#if release.body}}

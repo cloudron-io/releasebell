@@ -173,6 +173,7 @@ async function syncReleasesByProject(user, project) {
         release.notified = !project.lastSuccessfulSyncAt ? true : !project.enabled;
         release.body = '';
         release.createdAt = 0;
+        release.prerelease = false;
 
         // skip fetching details for notification which will not be sent
         if (release.notified) {
@@ -180,14 +181,15 @@ async function syncReleasesByProject(user, project) {
             continue;
         }
 
-        let result;
         try {
-            result = await api.getReleaseBody(user.githubToken, project, release.version);
+            const result = await api.getRelease(user.githubToken, project, release.version); // { body, prerelease }
+            release.body = result.body;
+            release.prerelease = result.prerelease;
         } catch (error) {
             console.error(`Failed to get release body for ${project.name} ${release.version}. Falling back to commit message.`, error);
+            release.body = '';
+            release.prerelease = false;
         }
-
-        release.body = result || '';
 
         const commit = await api.getCommit(user.githubToken, project, release.sha);
 
@@ -271,8 +273,8 @@ async function sendNotificationEmail(release) {
         from: `ReleaseBell <${process.env.CLOUDRON_MAIL_FROM}>`,
         to: user.email,
         subject: `${project.name} ${release.version} released`,
-        text: `A new release at ${project.name} with version ${release.version} was published. ${release.body}. Read more about this release at ${versionLink}`,
-        html: EMAIL_TEMPLATE({ project: project, release: release, versionLink: versionLink, settingsLink: settingsLink })
+        text: `A new ${release.prerelease ? 'prerelease' : 'release'} at ${project.name} with version ${release.version} was published. ${release.body}. Read more about this release at ${versionLink}`,
+        html: EMAIL_TEMPLATE({ project, release, versionLink, settingsLink })
     };
 
     await transport.sendMail(mail);

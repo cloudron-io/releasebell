@@ -167,8 +167,8 @@ async function releasesAdd(release) {
     release.id = uuid.v4();
     release.createdAt = release.createdAt || 0;
 
-    await db.query('INSERT INTO releases (id, projectId, version, body, notified, createdAt) VALUES (?, ?, ?, ?, ?, ?)',
-        [ release.id, release.projectId, release.version, release.body, release.notified, release.createdAt ]);
+    await db.query('INSERT INTO releases (id, projectId, version, body, notified, prerelease, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [ release.id, release.projectId, release.version, release.body, release.notified, release.prerelease, release.createdAt ]);
 
     return release;
 }
