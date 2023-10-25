@@ -84,15 +84,18 @@ describe('Application life cycle test', function () {
 
         await browser.findElement(By.id('settingsSaveButton')).click();
 
+        execSync('spd-say "Waiting for 10 mins for sync"');
         console.log('waiting for 10 minutes for syncing');
 
         await browser.sleep(10 * 60 * 1000);
+
+        execSync('spd-say "Resuming test after sync"');
     }
 
     async function checkProjects() {
         await browser.get('https://' + app.fqdn);
         await browser.sleep(3000);
-        await browser.wait(until.elementLocated(By.xpath('//a[@href="https://github.com/cloudron-io/surfer"]')), TEST_TIMEOUT);
+        await browser.wait(until.elementLocated(By.xpath('//td/a[contains(@href, "https://github.com/")]')), TEST_TIMEOUT);
     }
 
     function getAppInfo() {
@@ -154,7 +157,7 @@ describe('Application life cycle test', function () {
     it('can install app', function () { execSync(`cloudron install --appstore-id io.cloudron.releasebell --location ${LOCATION}`, EXEC_ARGS); });
 
     it('can get app information', getAppInfo);
-    it('can login', login);
+    it('can login', login.bind(null, true));
     it('can set gh token', setGithubToken);
     it('can logout', logout);
 
