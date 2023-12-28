@@ -1,6 +1,6 @@
 'use strict';
 
-var assert = require('assert'),
+const assert = require('assert'),
     uuid = require('uuid'),
     mysql = require('mysql2');
 

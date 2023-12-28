@@ -204,6 +204,8 @@ async function syncReleasesByProject(user, project) {
             const fullBody = 'Latest commit message: \n' + commit.message;
             const releaseBody = fullBody.length > 1000 ? fullBody.substring(0, 1000) + '...' : fullBody;
             release.body = releaseBody;
+        } else { // TEXT can only hold 65535
+            release.body = release.body.length > 65000 ? release.body.substring(0, 65000) + '...' : release.body;
         }
 
         await database.releases.add(release);
