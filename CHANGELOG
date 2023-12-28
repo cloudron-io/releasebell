@@ -94,3 +94,6 @@
 [1.10.0]
 * Update base image to 4.2.0
 
+[1.10.1]
+* truncate release body, if it is too large
+
