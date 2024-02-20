@@ -97,3 +97,7 @@
 [1.10.1]
 * truncate release body, if it is too large
 
+[1.11.0]
+* Fix manual github repo tracking
+* Update dependencies
+
