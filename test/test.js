@@ -32,6 +32,7 @@ describe('Application life cycle test', function () {
     const PASSWORD = process.env.PASSWORD;
     const ghToken = process.env.GITHUB_TOKEN;
 
+    let session = false;
     let browser, app;
 
     before(function () {
@@ -47,7 +48,7 @@ describe('Application life cycle test', function () {
         await browser.wait(until.elementIsVisible(browser.findElement(selector)), TEST_TIMEOUT);
     }
 
-    async function login(session = false) {
+    async function login() {
         await browser.manage().deleteAllCookies();
         await browser.get(`https://${app.fqdn}`);
 
@@ -55,10 +56,12 @@ describe('Application life cycle test', function () {
         await browser.findElement(By.id('loginButton')).click();
 
         if (!session) {
-            await visible(By.xpath('//input[@name="username"]'));
-            await browser.findElement(By.xpath('//input[@name="username"]')).sendKeys(USERNAME);
-            await browser.findElement(By.xpath('//input[@name="password"]')).sendKeys(PASSWORD);
-            await browser.findElement(By.xpath('//button[@type="submit" and contains(text(), "Sign in")]')).click();
+            await visible(By.id('inputUsername'));
+            await browser.findElement(By.id('inputUsername')).sendKeys(USERNAME);
+            await browser.findElement(By.id('inputPassword')).sendKeys(PASSWORD);
+            await browser.findElement(By.id('loginSubmitButton')).click();
+
+            session = true;
         }
 
         await visible(By.id('logoutButton'));
@@ -116,7 +119,7 @@ describe('Application life cycle test', function () {
 
     it('restart app', function () { execSync('cloudron restart --app ' + app.id, EXEC_ARGS); });
 
-    it('can login', login.bind(null, true));
+    it('can login', login);
     it('can see projects', checkProjects);
     it('can logout', logout);
 
@@ -131,7 +134,7 @@ describe('Application life cycle test', function () {
         execSync(`cloudron restore --backup ${backups[0].id} --app ${app.id}`, EXEC_ARGS);
     });
 
-    it('can login', login.bind(null, true));
+    it('can login', login);
     it('can see projects', checkProjects);
     it('can logout', logout);
 
@@ -144,7 +147,7 @@ describe('Application life cycle test', function () {
         expect(app).to.be.an('object');
     });
 
-    it('can login', login.bind(null, true));
+    it('can login', login);
     it('can see projects', checkProjects);
     it('can logout', logout);
 
@@ -157,7 +160,7 @@ describe('Application life cycle test', function () {
     it('can install app', function () { execSync(`cloudron install --appstore-id io.cloudron.releasebell --location ${LOCATION}`, EXEC_ARGS); });
 
     it('can get app information', getAppInfo);
-    it('can login', login.bind(null, true));
+    it('can login', login);
     it('can set gh token', setGithubToken);
     it('can logout', logout);
 
@@ -168,7 +171,7 @@ describe('Application life cycle test', function () {
         expect(app).to.be.an('object');
     });
 
-    it('can login', login.bind(null, true));
+    it('can login', login);
     it('can see projects', checkProjects);
     it('can logout', logout);
 
