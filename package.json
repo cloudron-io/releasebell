@@ -35,16 +35,15 @@
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.4",
-    "chromedriver": "^121.0.2",
+    "chromedriver": "^125.0.3",
     "eslint": "^8.56.0",
     "eslint-plugin-vue": "^9.21.1",
     "expect.js": "^0.3.1",
-    "mocha": "^10.3.0",
+    "mocha": "^10.4.0",
     "pankow": "^1.2.0",
     "primeicons": "^6.0.1",
     "primevue": "^3.48.1",
-    "selenium-server-standalone-jar": "^4.17.0",
-    "selenium-webdriver": "^4.18.1",
+    "selenium-webdriver": "^4.21.0",
     "vite": "^5.1.3"
   }
 }
