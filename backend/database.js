@@ -146,11 +146,15 @@ async function usersGet(userId) {
     return result[0];
 }
 
-async function usersUpdate(userId, githubToken) {
+async function usersUpdate(userId, githubToken, email) {
     assert.strictEqual(typeof userId, 'string');
     assert.strictEqual(typeof githubToken, 'string');
+    assert.strictEqual(typeof email, 'string');
 
-    await db.query('UPDATE users SET githubToken=? WHERE id=?', [ githubToken, userId ]);
+    let args = [ githubToken, email, userId ];
+    let query = 'UPDATE users SET githubToken=?,email=? WHERE id=?';
+
+    await db.query(query, args);
 }
 
 async function releasesList(projectId) {

@@ -58,6 +58,15 @@ async function auth(req, res, next) {
         }
     }
 
+    // update email if changed
+    if (user.email !== req.oidc.user.email) {
+        try {
+            await database.users.update(user.id, user.githubToken, user.email);
+        } catch (e) {
+            console.error('Failed to update email for user.', user, e);
+        }
+    }
+
     req.user = user;
 
     next();
@@ -81,7 +90,7 @@ async function profileUpdate(req, res, next) {
     }
 
     try {
-        await database.users.update(req.user.id, githubToken);
+        await database.users.update(req.user.id, githubToken, req.user.email);
     } catch (error) {
         return next(new HttpError(500, error));
     }
