@@ -104,3 +104,5 @@
 [1.11.1]
 * Update user email if changed at the OpenID provider
 
+[1.11.2]
+* Update user email if changed at the OpenID provider

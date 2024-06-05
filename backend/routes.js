@@ -61,7 +61,8 @@ async function auth(req, res, next) {
     // update email if changed
     if (user.email !== req.oidc.user.email) {
         try {
-            await database.users.update(user.id, user.githubToken, user.email);
+            await database.users.update(user.id, user.githubToken, req.oidc.user.email);
+            user.email = req.oidc.user.email;
         } catch (e) {
             console.error('Failed to update email for user.', user, e);
         }
