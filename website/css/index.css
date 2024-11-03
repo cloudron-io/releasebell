@@ -1,0 +1,114 @@
+
+body {
+    margin: 0;
+    font-family: Helvetica Neue,Helvetica,SimSun,sans-serif;
+    font-weight: 400;
+    color: rgb(96, 98, 102);
+}
+
+body > .el-container {
+    height: 100%;
+}
+
+.el-main {
+    padding: 0;
+    flex-direction: column;
+}
+
+.hero {
+    display: flex;
+    justify-content: space-around;
+    flex-direction: column;
+    height: 70%;
+}
+
+.features {
+    padding-top: 100px;
+    padding-bottom: 150px;
+}
+
+.screenshots {
+    justify-content: center;
+    background-color: #494f5a;
+    display: flex;
+}
+
+.screenshots.large {
+    padding: 50px;
+}
+
+.screenshots.small {
+    padding: 50px 0;
+}
+
+.opensource {
+    padding: 100px;
+    text-align: center;
+    background-color: #293a4c1a;
+}
+
+.footer {
+    background-color: #293a4c1a;
+    padding: 20px;
+    font-size: 12px;
+}
+
+.el-carousel {
+    width: 1024px;
+}
+
+.el-carousel__item > img {
+    width: 100%;
+}
+
+.el-card {
+    width: 300px;
+}
+
+p {
+    margin-bottom: 0;
+}
+
+a {
+    color: #66b1ff;
+    text-decoration: none;
+}
+
+a:hover, a:focus {
+    color: #409EFF;
+    text-decoration: none;
+}
+
+.el-menu-item {
+    padding: 0;
+}
+
+.el-menu-item a {
+    padding: 20px;
+}
+
+.el-row {
+    flex-wrap: wrap;
+}
+
+h1 {
+    font-size: 26px;
+    margin: 0;
+    font-weight: 400;
+}
+
+.hero h2 {
+    font-size: 19px;
+    font-weight: normal;
+}
+
+.box-card {
+    margin-bottom: 20px;
+    color: rgb(96, 98, 102);
+}
+
+.box-card h4 {
+    font-size: 21px;
+    font-weight: 400;
+    margin: 5px 0px;
+}

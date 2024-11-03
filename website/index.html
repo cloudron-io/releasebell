@@ -1,0 +1,141 @@
+<html>
+<head>
+    <title> Release Bell </title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+
+    <meta name="description" content="Get notifications for releases of your favorite GitHub projects"/>
+    <meta name="keywords" content="GitHub,notifications,releases,tags,sibbell"/>
+
+    <!-- Open Graph tags -->
+    <meta property="og:title" content="Release Bell"/>
+    <meta property="og:description" content="Get notifications for releases of your favorite GitHub projects"/>
+    <meta property="og:image" content="https://releasebell.com/img/releasebell_2.png"/>
+
+    <!-- twitter card meta information -->
+    <meta name="twitter:card" content="summary_large_image"/>
+    <meta name="twitter:title" content="Release Bell"/>
+    <meta name="twitter:description" content="Get notifications for releases of your favorite GitHub projects"/>
+    <meta name="twitter:image" content="https://releasebell.com/img/releasebell_2.png" />
+    <meta name="twitter:site" content="@cloudron_io"/>
+    <meta name="twitter:creator" content="@cloudron_io"/>
+
+    <link rel="icon" type="image/png" href="./favicon.png">
+
+    <link rel="stylesheet" href="./css/theme-chalk.css">
+    <link rel="stylesheet" href="./css/display.css">
+    <link rel="stylesheet" href="./css/index.css">
+
+    <script src="./js/vue.js"></script>
+    <script src="./js/element-ui.js"></script>
+
+    <!-- Matomo -->
+    <script type="text/javascript">
+      var _paq = _paq || [];
+      /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
+      _paq.push(['trackPageView']);
+      _paq.push(['enableLinkTracking']);
+      (function() {
+        var u="//analytics.cloudron.io/";
+        _paq.push(['setTrackerUrl', u+'piwik.php']);
+        _paq.push(['setSiteId', '8']);
+        var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+        g.type='text/javascript'; g.async=true; g.defer=true; g.src=u+'piwik.js'; s.parentNode.insertBefore(g,s);
+      })();
+    </script>
+    <!-- End Matomo Code -->
+
+</head>
+<body>
+
+<el-container id="app">
+  <el-header>
+    <el-menu class="el-menu-demo" mode="horizontal">
+      <el-menu-item><a href="#"><i class="el-icon-bell"></i> Release Bell</a></el-menu-item>
+      <el-menu-item style="float: right"><a href="https://git.cloudron.io/cloudron/releasebell" target="_blank"><img src="./img/cloudron.png" height="32px"/> <span class="hidden-md-and-down">Cloudron Project</span></a></el-menu-item>
+    </el-menu>
+  </el-header>
+  <el-main>
+    <el-dialog title="Install" :visible.sync="installDialogVisible" center>
+      <center>Release Bell can be directly installed on your <a href="https://cloudron.io" target="_blank">Cloudron</a> through the app store or manually on your server, by following the project instructions.</center>
+      <span slot="footer" class="dialog-footer">
+        <a href="https://cloudron.io/store/io.cloudron.releasebell.html" type="primary"><el-button type="primary">Cloudron</el-button></a>
+        <a href="https://git.cloudron.io/cloudron/releasebell#release-bell"><el-button>Manual</el-button></a>
+      </span>
+    </el-dialog>
+
+    <div class="hero">
+      <div style="text-align: center">
+        <h1>Stay on top of releases for repos you star on GitHub</h1>
+        <h2>Self-Hosted Release Notification Service</h2>
+        <br/>
+        <br/>
+        <el-button type="primary" @click="installDialogVisible = true">Install Now</el-button>
+        <br/>
+        <br/>
+        <br/>
+        <br/>
+      </div>
+    </div>
+    <div class="screenshots large hidden-md-and-down">
+      <el-carousel :interval="4000" type="card" :height="300">
+        <el-carousel-item v-for="item in 4" :key="item">
+          <img :src="'./img/releasebell_' + item + '.png'"/>
+        </el-carousel-item>
+      </el-carousel>
+    </div>
+    <div class="screenshots small hidden-md-and-up">
+      <el-carousel :interval="4000" :height="300">
+        <el-carousel-item v-for="item in 4" :key="item" arrow="hover">
+          <img :src="'./img/releasebell_' + item + '.png'"/>
+        </el-carousel-item>
+      </el-carousel>
+    </div>
+    <div class="features">
+      <center>
+        <h1>Features</h1>
+        <br/>
+        <br/>
+        <br/>
+      </center>
+      <el-row type="flex" class="row-bg" justify="space-around">
+        <el-card class="box-card">
+          <h4>GitHub Integration</h4>
+          <p>
+            Just provide a GitHub token and wait for notification emails.
+          </p>
+        </el-card>
+        <el-card class="box-card">
+          <h4>Self-Hosted</h4>
+          <p>Run on your own server. Only requires <a href="https://nodejs.org/" target="_blank">nodejs</a>, mysql and an email server.</p>
+        </el-card>
+        <el-card class="box-card">
+          <h4>Email Notifications</h4>
+          <p>For every new release on a starred GitHub repository, you will receive a notification email.</p>
+        </el-card>
+        <el-card class="box-card">
+          <h4>Settings per Repo</h4>
+          <p>You can enable or disable notifcations for each starred project individually.</p>
+        </el-card>
+      </el-row>
+    </div>
+    <div class="opensource">
+      <h1>Open Source</h1>
+      <p>
+        Release Bell is licensed under the MIT license.<br/>
+        <br/>
+        <a href="https://git.cloudron.io/cloudron/releasebell" target="_blank"><el-button type="primary" size="small">Source Code Repository</el-button></a>
+      </p>
+    </div>
+    <div class="footer">
+      <center>
+        Copyright © <a href="https://cloudron.io" target="_blank">Cloudron</a>
+      </center>
+    </div>
+  </el-main>
+</el-container>
+
+<script src="./js/index.js"></script>
+
+</body>
+</html>
