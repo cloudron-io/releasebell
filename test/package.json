@@ -1,0 +1,20 @@
+{
+  "name": "test",
+  "version": "1.0.0",
+  "description": "",
+  "main": "test.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "expect.js": "^0.3.1",
+    "mocha": "^11.1.0",
+    "selenium-server-standalone-jar": "^4.29.0",
+    "selenium-webdriver": "^4.30.0"
+  },
+  "dependencies": {
+    "chromedriver": "^134.0.5"
+  }
+}
