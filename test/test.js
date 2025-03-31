@@ -1,10 +1,6 @@
 #!/usr/bin/env node
 
-/* jshint esversion: 8 */
-/* global describe */
-/* global before */
-/* global after */
-/* global it */
+/* global it, xit, describe, before, afterEach */
 
 'use strict';
 
@@ -12,35 +8,42 @@ require('chromedriver');
 
 const execSync = require('child_process').execSync,
     expect = require('expect.js'),
+    fs = require('fs'),
     path = require('path'),
     { Builder, By, until } = require('selenium-webdriver'),
     { Options } = require('selenium-webdriver/chrome');
 
-if (!process.env.USERNAME || !process.env.PASSWORD || !process.env.GITHUB_TOKEN) {
-    console.log('USERNAME, PASSWORD and GITHUB_TOKEN env vars need to be set');
-    process.exit(1);
-}
-
 describe('Application life cycle test', function () {
     this.timeout(0);
 
-    const LOCATION = 'test';
+    const LOCATION = process.env.LOCATION || 'test';
     const TEST_TIMEOUT = 10000;
     const EXEC_ARGS = { cwd: path.resolve(__dirname, '..'), stdio: 'inherit' };
 
     const USERNAME = process.env.USERNAME;
     const PASSWORD = process.env.PASSWORD;
+    // const TIMEOUT = parseInt(process.env.TIMEOUT) || 40000;
     const ghToken = process.env.GITHUB_TOKEN;
 
-    let session = false;
     let browser, app;
 
     before(function () {
-        browser = new Builder().forBrowser('chrome').setChromeOptions(new Options().windowSize({ width: 1280, height: 1024 })).build();
+        const chromeOptions = new Options().windowSize({ width: 1280, height: 1024 });
+        if (process.env.CI) chromeOptions.addArguments('no-sandbox', 'disable-dev-shm-usage', 'headless');
+        chromeOptions.addArguments('disable-notifications');
+        browser = new Builder().forBrowser('chrome').setChromeOptions(chromeOptions).build();
+        if (!fs.existsSync('./screenshots')) fs.mkdirSync('./screenshots');
     });
 
-    after(function () {
-        browser.quit();
+    afterEach(async function () {
+        if (!process.env.CI || !app) return;
+
+        const currentUrl = await browser.getCurrentUrl();
+        if (!currentUrl.includes(app.domain)) return;
+        expect(this.currentTest.title).to.be.a('string');
+
+        const screenshotData = await browser.takeScreenshot();
+        fs.writeFileSync(`./screenshots/${new Date().getTime()}-${this.currentTest.title.replaceAll(' ', '_')}.png`, screenshotData, 'base64');
     });
 
     async function visible(selector) {
@@ -48,20 +51,18 @@ describe('Application life cycle test', function () {
         await browser.wait(until.elementIsVisible(browser.findElement(selector)), TEST_TIMEOUT);
     }
 
-    async function login() {
+    async function login(hasSession = false) {
         await browser.manage().deleteAllCookies();
         await browser.get(`https://${app.fqdn}`);
 
         await visible(By.id('loginButton'));
         await browser.findElement(By.id('loginButton')).click();
 
-        if (!session) {
+        if (!hasSession) {
             await visible(By.id('inputUsername'));
             await browser.findElement(By.id('inputUsername')).sendKeys(USERNAME);
             await browser.findElement(By.id('inputPassword')).sendKeys(PASSWORD);
             await browser.findElement(By.id('loginSubmitButton')).click();
-
-            session = true;
         }
 
         await visible(By.id('logoutButton'));
@@ -77,6 +78,8 @@ describe('Application life cycle test', function () {
     }
 
     async function setGithubToken() {
+        if (process.env.CI) return;
+
         await browser.get('https://' + app.fqdn);
 
         await visible(By.id('settingsButton'));
@@ -96,6 +99,8 @@ describe('Application life cycle test', function () {
     }
 
     async function checkProjects() {
+        if (process.env.CI) return;
+
         await browser.get('https://' + app.fqdn);
         await browser.sleep(3000);
         await browser.wait(until.elementLocated(By.xpath('//td/a[contains(@href, "https://github.com/")]')), TEST_TIMEOUT);
@@ -112,14 +117,14 @@ describe('Application life cycle test', function () {
 
     it('can get app information', getAppInfo);
 
-    it('can login', login);
+    it('can login', login.bind(null, false /* hasSession */));
     it('can set gh token', setGithubToken);
     it('can see projects', checkProjects);
     it('can logout', logout);
 
     it('restart app', function () { execSync('cloudron restart --app ' + app.id, EXEC_ARGS); });
 
-    it('can login', login);
+    it('can login', login.bind(null, true /* hasSession */));
     it('can see projects', checkProjects);
     it('can logout', logout);
 
@@ -134,7 +139,7 @@ describe('Application life cycle test', function () {
         execSync(`cloudron restore --backup ${backups[0].id} --app ${app.id}`, EXEC_ARGS);
     });
 
-    it('can login', login);
+    it('can login', login.bind(null, true /* hasSession */));
     it('can see projects', checkProjects);
     it('can logout', logout);
 
@@ -147,7 +152,7 @@ describe('Application life cycle test', function () {
         expect(app).to.be.an('object');
     });
 
-    it('can login', login);
+    it('can login', login.bind(null, true /* hasSession */));
     it('can see projects', checkProjects);
     it('can logout', logout);
 
@@ -160,7 +165,7 @@ describe('Application life cycle test', function () {
     it('can install app', function () { execSync(`cloudron install --appstore-id io.cloudron.releasebell --location ${LOCATION}`, EXEC_ARGS); });
 
     it('can get app information', getAppInfo);
-    it('can login', login);
+    it('can login', login.bind(null, true /* hasSession */));
     it('can set gh token', setGithubToken);
     it('can logout', logout);
 
@@ -171,7 +176,7 @@ describe('Application life cycle test', function () {
         expect(app).to.be.an('object');
     });
 
-    it('can login', login);
+    it('can login', login.bind(null, true /* hasSession */));
     it('can see projects', checkProjects);
     it('can logout', logout);
 
