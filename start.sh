@@ -28,7 +28,7 @@ cat <<EOF > /run/database.json
 EOF
 
 echo "=> Run db-migration"
-/app/code/node_modules/.bin/db-migrate up
+gosu cloudron:cloudron /app/code/node_modules/.bin/db-migrate up
 
 echo "=> Start application"
 exec /usr/local/bin/gosu cloudron:cloudron node /app/code/index.js
